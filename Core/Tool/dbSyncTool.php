@@ -27,9 +27,11 @@ class dbSyncTool {
 			$this->prefix = isset($option['prefix']) ? $option['prefix'] : '';
 		}
 		
-		$this->query("set sql_mode = ''");
-		$this->query("set character set 'utf8'");
-		$this->query("set names 'utf8'");
+		if(!$this->is_sqlite()){
+			$this->query("set sql_mode = ''");
+			$this->query("set character set 'utf8'");
+			$this->query("set names 'utf8'");
+		}
 		
 		if($this->prefix){
 			foreach($this->syncData as $key => $value){
@@ -45,15 +47,23 @@ class dbSyncTool {
 	}
 	private function get_table_list(){
 		$this->log[] = '获取数据库中已存在的表...';
-		$result = $this->query('show tables;');
-		if($row = $this->fetch($result)){
-			$tmp = array_keys($row)[0];
-			$this->table[] = $row[$tmp];
-			$this->log[] = '找到表[' . $row[$tmp] . ']';
-			
+		if($this->is_sqlite()){
+			$result = $this->query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';");
 			while($row = $this->fetch($result)){
+				$this->table[] = $row['name'];
+				$this->log[] = '找到表[' . $row['name'] . ']';
+			}
+		}else{
+			$result = $this->query('show tables;');
+			if($row = $this->fetch($result)){
+				$tmp = array_keys($row)[0];
 				$this->table[] = $row[$tmp];
 				$this->log[] = '找到表[' . $row[$tmp] . ']';
+
+				while($row = $this->fetch($result)){
+					$this->table[] = $row[$tmp];
+					$this->log[] = '找到表[' . $row[$tmp] . ']';
+				}
 			}
 		}
 	}
@@ -77,16 +87,34 @@ class dbSyncTool {
 		}
 		if($id['default'] !== FALSE && $id['default'] !== null){
 			$sql .= 'DEFAULT ' . (substr($id['default'], 0, 1) === '$' ? substr($id['default'], 1, strlen($id['default'])-1) : '\'' . $id['default'] . '\'') . ' ';
+		}else if($this->is_sqlite() && $id['isNull'] === FALSE && $id['A_I'] === FALSE){
+			$sql .= 'DEFAULT \'\' ';
 		}
-		if($breakA_I === false && $id['A_I'] !== FALSE){
+		if($breakA_I === false && $id['A_I'] !== FALSE && !$this->is_sqlite()){
 			$sql .= 'AUTO_INCREMENT ';
 		}
-		if(!empty($id['bewrite'])){
+		if(!empty($id['bewrite']) && !$this->is_sqlite()){
 			$sql .= 'COMMENT \''.addslashes($id['bewrite']).'\'';
 		}
 		return $sql;
 	}
 	private function get_id_type($id){
+		if($this->is_sqlite()){
+			if($id['A_I'] !== FALSE && $id['key'] == 'PRI'){
+				return 'INTEGER PRIMARY KEY AUTOINCREMENT';
+			}
+			switch(strtolower($id['type'])){
+				case 'int':
+				case 'tinyint':
+					return 'INTEGER';
+				case 'datetime':
+				case 'varchar':
+				case 'text':
+				case 'mediumtext':
+				default:
+					return 'TEXT';
+			}
+		}
 		$sql = $id['type'];
 		if($id['len'] !== FALSE){
 			$sql .= '('.$id['len'].')';
@@ -105,15 +133,17 @@ class dbSyncTool {
 			}
 		}
 		foreach($tableSync as $i=>$row){
-			if($row['key'] !== false){
+			if($row['key'] !== false && !$this->is_sqlite()){
 				$sql .= ', ';
 				$sql .= implode(', ', $this->get_id_key($row));
 			}
 		}
 		$sql .= ') ';
-		$sql .= 'ENGINE='.$this->option['ENGINE'].' ';
-		$sql .= 'DEFAULT CHARSET='.$this->option['CHARSET'].' ';
-		$sql .= 'COLLATE='.$this->option['COLLATE'].';';
+		if(!$this->is_sqlite()){
+			$sql .= 'ENGINE='.$this->option['ENGINE'].' ';
+			$sql .= 'DEFAULT CHARSET='.$this->option['CHARSET'].' ';
+			$sql .= 'COLLATE='.$this->option['COLLATE'].';';
+		}
 		$this->query($sql);
 	}
 	private function get_id_key($id,$type = 'create'){
@@ -153,6 +183,21 @@ class dbSyncTool {
 		$this->log[] = '检测表[' . $table . ']';
 		$mysqlIds = [];
 		$tableSync = $this->syncData[$table];
+		if($this->is_sqlite()){
+			$result = $this->query('PRAGMA table_info(`'.$table.'`);');
+			if($result){
+				while($row = $this->fetch($result)){
+					$mysqlIds[$row['name']] = $row;
+				}
+			}
+			$idList = array_keys($mysqlIds);
+			foreach($tableSync as $i=>$row){
+				if(!in_array($row['id'], $idList)){
+					$this->fix_id($table, $i, 'add');
+				}
+			}
+			return;
+		}
 		
 		$result = $this->query('DESC `'.$table.'`;');
 		if($result){
@@ -264,15 +309,26 @@ class dbSyncTool {
 			
 			$this->query($sql);
 			
-			$this->fix_id($table, $keyIndex, 'fix');
+			if(!$this->is_sqlite()){
+				$this->fix_id($table, $keyIndex, 'fix');
+			}
 		}
 	}
 	
 	private function query($sql){
 		$this->logSQL[] = $sql;
+		if(is_object($this->mysql) && method_exists($this->mysql, 'query')){
+			return $this->mysql->query($sql);
+		}
 		return mysqli_query($this->mysql, $sql);
 	}
 	private function fetch($result){
+		if(is_object($this->mysql) && method_exists($this->mysql, 'fetch')){
+			return $this->mysql->fetch($result);
+		}
 		return mysqli_fetch_assoc($result);
+	}
+	private function is_sqlite(){
+		return is_object($this->mysql) && method_exists($this->mysql, 'is_sqlite') && $this->mysql->is_sqlite();
 	}
 }

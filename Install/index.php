@@ -4,8 +4,8 @@ header("Content-Type: text/html; charset=UTF-8");
 header("Powered-By: Xlch-AdminPHP");
 setcookie("xlch_token", '', time()-3600, '/');
 
-if(version_compare('5.4', PHP_VERSION, ">")) {
-	die('请使用PHP 5.4 或更高的版本运行本程序！<hr></hr>Powered By AdminPHP! (C) Flandre-Studio.cn');
+if(version_compare('7.0', PHP_VERSION, ">")) {
+	die('请使用PHP 7.0 或更高的版本运行本程序！<hr></hr>Powered By AdminPHP! (C) Flandre-Studio.cn');
 }
 session_start();
 $IsInstalled=is_file('Install.lock');
@@ -51,6 +51,15 @@ function checkclass($f,$m = false) {
 			return '<font color="red">不支持</font>';
 		}
 	}
+}
+function is_sqlite_available(){
+	return class_exists('PDO') && in_array('sqlite', PDO::getAvailableDrivers());
+}
+function random_database_name(){
+	if(function_exists('random_bytes')){
+		return 'classbook_' . bin2hex(random_bytes(16)) . '.sqlite';
+	}
+	return 'classbook_' . md5(RandString(128) . microtime(true)) . '.sqlite';
 }
 function RandString($length){
 	$str = null;
@@ -115,6 +124,7 @@ function Logg($text,$type = false){
 	}
 }
 function Install(){
+	$dbType = (isset($_POST['Mysql_Type']) && $_POST['Mysql_Type'] == 'sqlite') ? 'sqlite' : 'mysql';
 	Logg('检测环境配置',1);
 	$Check=array(
 		[
@@ -139,7 +149,7 @@ function Install(){
 		],
 		[
 			'Name'=>'数据库功能',
-			'Is'=>function_exists('mysqli_connect')
+			'Is'=>($dbType == 'sqlite' ? is_sqlite_available() : function_exists('mysqli_connect'))
 		]
 	);
 	foreach($Check as $row){
@@ -189,16 +199,39 @@ function Install(){
 	
 	Logg('写入数据库',1);
 	Logg('连接数据库',2);
-	$Mysql=new DB(
-		$_POST["Mysql_IP"],
-		$_POST["Mysql_Username"],
-		$_POST["Mysql_Password"],
-		$_POST["Mysql_Database"],
-		$_POST["Mysql_Port"]
-	);
+	$MysqlInfoArray = [
+		'Type' => $dbType,
+		'Ip' => isset($_POST["Mysql_IP"]) ? $_POST["Mysql_IP"] : '',
+		'Port' => isset($_POST["Mysql_Port"]) ? $_POST["Mysql_Port"] : '',
+		'Username' => isset($_POST["Mysql_Username"]) ? $_POST["Mysql_Username"] : '',
+		'Password' => isset($_POST["Mysql_Password"]) ? $_POST["Mysql_Password"] : '',
+		'Database' => isset($_POST["Mysql_Database"]) ? $_POST["Mysql_Database"] : '',
+		'QZ' => 'xlch'
+	];
+	if($dbType == 'sqlite'){
+		if(!is_dir('../data')){
+			mkdir('../data', 0777, true);
+		}
+		if(!is_file('../data/.htaccess')){
+			file_put_contents('../data/.htaccess', "Require all denied\r\nDeny from all\r\n");
+		}
+		if(!is_file('../data/web.config')){
+			file_put_contents('../data/web.config', "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<configuration><system.webServer><security><requestFiltering><hiddenSegments><add segment=\"data\" /></hiddenSegments></requestFiltering></security></system.webServer></configuration>");
+		}
+		$MysqlInfoArray['Ip'] = '';
+		$MysqlInfoArray['Port'] = '';
+		$MysqlInfoArray['Username'] = '';
+		$MysqlInfoArray['Password'] = '';
+		$MysqlInfoArray['Database'] = 'data/' . random_database_name();
+	}
+	$ConnectMysqlInfo = $MysqlInfoArray;
+	if($dbType == 'sqlite'){
+		$ConnectMysqlInfo['Database'] = realpath('..') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $MysqlInfoArray['Database']);
+	}
+	$Mysql=new DB($ConnectMysqlInfo);
 	
 	if(!$Mysql->link){
-		Logg(mysqli_connect_error($Mysql->link));
+		Logg($Mysql->error());
 		return false;
 	}else{
 		Logg(0);
@@ -210,7 +243,7 @@ function Install(){
 	$syncData = $xlchclassbookSyncData['data'];
 	$option = $xlchclassbookSyncData['option'];
 
-	$dbSyncTool = new dbSyncTool($Mysql->link, $syncData, $option);
+	$dbSyncTool = new dbSyncTool($Mysql, $syncData, $option);
 	$dbSyncTool->fix();
 	foreach($dbSyncTool->log as $row){
 		Logg('安装数据库',2);
@@ -219,20 +252,7 @@ function Install(){
 	
 	Logg('写入配置文件',1);
 	Logg('保存数据库信息',2);
-	$MysqlInfo=<<<Xlch88
-<?php
-return <<<FlandreStudio_JSON
-{
-    "Ip": "$_POST[Mysql_IP]",
-    "Port": "$_POST[Mysql_Port]",
-    "Username": "$_POST[Mysql_Username]",
-    "Password": "$_POST[Mysql_Password]",
-    "Database": "$_POST[Mysql_Database]",
-    "QZ": "xlch"
-}
-FlandreStudio_JSON;
-?>
-Xlch88;
+	$MysqlInfo="<?php\r\nreturn <<<FlandreStudio_JSON\r\n".json_encode($MysqlInfoArray, JSON_PRETTY_PRINT + JSON_UNESCAPED_UNICODE)."\r\nFlandreStudio_JSON;\r\n?>";
 	if(file_put_contents('../Core/WebApp/Config/Mysql/Mysql.php',$MysqlInfo) === FALSE){
 		Logg('写入文件[Core/WebApp/Config/Mysql/Mysql.php]失败，请检查权限');
 		return false;
@@ -265,7 +285,7 @@ Xlch88;
 		if($Mysql->query('update xlch_user set Username = "'.addslashes($_POST['Admin_Username']).'", Password = "'.addslashes($_POST['Admin_Password']).'", `Group` = "Admin" where ID = 1')){
 			Logg(0);
 		}else{
-			Logg(mysqli_error($Mysql->link));
+			Logg($Mysql->error());
 			return false;
 		}
 	}else{
@@ -288,7 +308,7 @@ Xlch88;
 		if($Mysql->query($sql)){
 			Logg(0);
 		}else{
-			Logg(mysqli_error($Mysql->link));
+			Logg($Mysql->error());
 			return false;
 		}
 	}
@@ -302,7 +322,7 @@ Xlch88;
 		if($Mysql->count('select count(1) from `'.$table.'`') == '0'){
 			Logg('写入默认数据',2);
 			if(!$Mysql->query($sql)){
-				Logg(mysqli_error($Mysql->link));
+				Logg($Mysql->error());
 			}else{
 				Logg(0);
 			}
@@ -497,16 +517,22 @@ include('../Core/AdminPHP/Config/SysConfig/Version.php');
 											</thead>
 											<tbody>
 												<tr>
-													<td>PHP 5.4或以上</td>
+													<td>PHP 7.0或以上</td>
 													<td>必须</td>
 													<td><?php echo phpversion(); ?></td>
 													<td>PHP版本支持</td>
 												</tr>
 												<tr>
 													<td>mysqli_connect()</td>
-													<td>必须</td>
+													<td>MySQL 必须</td>
 													<td><?php echo checkfunc('mysqli_connect',true); ?></td>
-													<td>连接数据库</td>
+													<td>连接 MySQL 数据库</td>
+												</tr>
+												<tr>
+													<td>PDO SQLite</td>
+													<td>SQLite 必须</td>
+													<td><?php echo is_sqlite_available() ? '<font color="green">可用</font>' : '<font color="red">不支持</font>'; ?></td>
+													<td>连接 SQLite 数据库</td>
 												</tr>
 												<tr>
 													<td>imagecreatefromjpeg()</td>
@@ -674,35 +700,59 @@ Xlch88;
 										<form class="form-horizontal" method=post action="?step=<?=($Step+1)?>">
 											<h3>1.数据库配置</h3>
 											<div class="form-group">
+												<label for="Mysql_Type" class="col-sm-2 control-label">数据库类型</label>
+												<div class="col-sm-10">
+													<div class="fg-line">
+														<div class="select">
+															<select class="form-control" id="Mysql_Type" name="Mysql_Type">
+																<option value="mysql">MySQL / MariaDB</option>
+																<option value="sqlite">SQLite</option>
+															</select>
+														</div>
+													</div>
+													<p class="help-block">选择 SQLite 时，安装程序会自动创建 data 目录并生成随机文件名的数据库。</p>
+												</div>
+											</div>
+											<div class="form-group mysql-config">
 												<label for="Mysql_IP" class="col-sm-2 control-label">数据库地址</label>
 												<div class="col-sm-10">
 													<input type="text" class="form-control" required="required" id="Mysql_IP" name="Mysql_IP" value="localhost">
 												</div>
 											</div>
-											<div class="form-group">
+											<div class="form-group mysql-config">
 												<label for="Mysql_Port" class="col-sm-2 control-label">数据库端口</label>
 												<div class="col-sm-10">
 													<input type="number" class="form-control" required="required" id="Mysql_Port" name="Mysql_Port" value="3306">
 												</div>
 											</div>
-											<div class="form-group">
+											<div class="form-group mysql-config">
 												<label for="Mysql_Username" class="col-sm-2 control-label">数据库用户名</label>
 												<div class="col-sm-10">
 													<input type="text" class="form-control" required="required" id="Mysql_Username" name="Mysql_Username" value="">
 												</div>
 											</div>
-											<div class="form-group">
+											<div class="form-group mysql-config">
 												<label for="Mysql_Password" class="col-sm-2 control-label">数据库密码</label>
 												<div class="col-sm-10">
 													<input type="text" class="form-control" required="required" id="Mysql_Password" name="Mysql_Password" value="">
 												</div>
 											</div>
-											<div class="form-group">
+											<div class="form-group mysql-config">
 												<label for="Mysql_Database" class="col-sm-2 control-label">数据库名</label>
 												<div class="col-sm-10">
 													<input type="text" class="form-control" required="required" id="Mysql_Database" name="Mysql_Database" value="">
 												</div>
 											</div>
+											<script>
+											$(function(){
+												var refreshDbType = function(){
+													var isSqlite = $('#Mysql_Type').val() == 'sqlite';
+													$('.mysql-config').toggle(!isSqlite).find('input').prop('disabled', isSqlite);
+												};
+												$('#Mysql_Type').on('change', refreshDbType);
+												refreshDbType();
+											});
+											</script>
 											<hr></hr>
 											<h3>2.网站信息配置</h3>
 											<div class="form-group">

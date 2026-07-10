@@ -19,7 +19,7 @@ if(!$DirInfo['AnybodyUpload'] && $DirInfo['CreaterId'] != $UserInfo['ID']){
 		'Message'=>'你没有权限上传。'
 	]);
 }
-if($Type == 'File' || $Type == 'SmMs' || $Type == 'Sina' || $Type == 'Qiniu'){
+if($Type == 'File' || $Type == 'SmMs' || $Type == 'Sina' || $Type == 'S3'){
 	if ($_FILES["file"]["error"] == UPLOAD_ERR_OK){
 		if (!(
 			($_FILES["file"]["type"] == "image/gif") || 
@@ -77,33 +77,13 @@ if($Type == 'File' || $Type == 'SmMs' || $Type == 'Sina' || $Type == 'Qiniu'){
 						'Message'=>$data['msg']
 					]);
 				}
-			}else if($Type == 'Qiniu'){
-				
-				include(AppDir . 'SDK/Qiniu/Config.php');
-				include(AppDir . 'SDK/Qiniu/functions.php');
-				include(AppDir . 'SDK/Qiniu/Auth.php');
-				include(AppDir . 'SDK/Qiniu/Storage/UploadManager.php');
-				include(AppDir . 'SDK/Qiniu/Storage/FormUploader.php');
-				include(AppDir . 'SDK/Qiniu/Zone.php');
-				include(AppDir . 'SDK/Qiniu/Http/Client.php');
-				include(AppDir . 'SDK/Qiniu/Http/Request.php');
-				include(AppDir . 'SDK/Qiniu/Http/Response.php');
-				
-				$accessKey = $WebConfig['Option']['Qiniu']['accessKey'];
-				$secretKey = $WebConfig['Option']['Qiniu']['secretKey'];
-				$bucket = $WebConfig['Option']['Qiniu']['bucket'];
-				$domain = $WebConfig['Option']['Qiniu']['domain'];
-				
-				$auth = new \Qiniu\Auth($accessKey, $secretKey);
-				$uploadMgr = new \Qiniu\Storage\UploadManager();
-				$token = $auth->uploadToken($bucket);
-				
-				$filename = date('Y-m-d').'_Flandre-Studio.cn_'.((float)$usec + (float)$sec).'_'.md5(RandString(2048)).'.'.$b;
-				list($ret, $err) = $uploadMgr->putFile($token, $filename, $_FILES["file"]["tmp_name"]);
-				
-				$url = "http://$domain/$filename";
-				
-				if(!$err){
+			}else if($Type == 'S3'){
+				list($usec, $sec) = explode(" ", microtime());
+				$filename = 'Upload/'.date('Y-m-d').'/Classbook_'.((float)$usec + (float)$sec).'_'.md5(RandString(2048)).'.'.$b;
+				$s3Config = isset($WebConfig['Option']['S3']) ? $WebConfig['Option']['S3'] : [];
+				list($success, $url, $error) = s3_upload_file($s3Config, $filename, $_FILES["file"]["tmp_name"], $_FILES["file"]["type"]);
+
+				if($success){
 					$Mysql->query("INSERT INTO `xlch_image` set `DirId` = '".$DirInfo['ID']."', `Url`='".daddslashes($url)."', `Name`='".daddslashes(htmlspecialchars($h))."', `UploadId`='".$UserInfo['ID']."', `AddDate` = '".date($DatetimeFormat)."'");
 					returnResult([
 						'Code'=>1,
@@ -112,7 +92,7 @@ if($Type == 'File' || $Type == 'SmMs' || $Type == 'Sina' || $Type == 'Qiniu'){
 				}else{
 					returnResult([
 						'Code'=>-3,
-						'Message'=>'由于服务器原因上传失败。'
+						'Message'=>'上传到 S3 兼容存储失败：'.$error
 					]);
 				}
 			}else if($Type == 'File'){
@@ -176,4 +156,97 @@ if($Type == 'File' || $Type == 'SmMs' || $Type == 'Sina' || $Type == 'Qiniu'){
 function returnResult($json){
 	if($json['Code'] < 1) header('HTTP/1.1 500'); 
 	exit(json_encode($json));
+}
+function s3_upload_file($config, $key, $file, $contentType){
+	$endpoint = isset($config['endpoint']) ? trim($config['endpoint']) : '';
+	$region = isset($config['region']) && $config['region'] !== '' ? trim($config['region']) : 'auto';
+	$accessKey = isset($config['accessKey']) ? trim($config['accessKey']) : '';
+	$secretKey = isset($config['secretKey']) ? trim($config['secretKey']) : '';
+	$bucket = isset($config['bucket']) ? trim($config['bucket']) : '';
+	$domain = isset($config['domain']) ? trim($config['domain']) : '';
+	$pathStyle = !empty($config['pathStyle']);
+
+	if($endpoint == '' || $accessKey == '' || $secretKey == '' || $bucket == ''){
+		return [false, '', '请先在后台配置 Endpoint、Access Key、Secret Key 和 Bucket'];
+	}
+	if(substr($endpoint, 0, 7) != 'http://' && substr($endpoint, 0, 8) != 'https://'){
+		$endpoint = 'https://' . $endpoint;
+	}
+	$endpoint = rtrim($endpoint, '/');
+	$parts = parse_url($endpoint);
+	if(!$parts || empty($parts['scheme']) || empty($parts['host'])){
+		return [false, '', 'Endpoint 格式错误'];
+	}
+
+	$host = $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : '');
+	$basePath = isset($parts['path']) ? rtrim($parts['path'], '/') : '';
+	$encodedKey = s3_uri_encode($key);
+	if($pathStyle){
+		$requestHost = $host;
+		$canonicalUri = $basePath . '/' . rawurlencode($bucket) . '/' . $encodedKey;
+		$url = $parts['scheme'] . '://' . $requestHost . $canonicalUri;
+	}else{
+		$requestHost = $bucket . '.' . $host;
+		$canonicalUri = $basePath . '/' . $encodedKey;
+		$url = $parts['scheme'] . '://' . $requestHost . $canonicalUri;
+	}
+
+	$payloadHash = hash_file('sha256', $file);
+	$amzDate = gmdate('Ymd\THis\Z');
+	$date = gmdate('Ymd');
+	$scope = $date . '/' . $region . '/s3/aws4_request';
+	$canonicalHeaders = 'host:' . $requestHost . "\n" . 'x-amz-content-sha256:' . $payloadHash . "\n" . 'x-amz-date:' . $amzDate . "\n";
+	$signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+	$canonicalRequest = "PUT\n" . $canonicalUri . "\n\n" . $canonicalHeaders . "\n" . $signedHeaders . "\n" . $payloadHash;
+	$stringToSign = "AWS4-HMAC-SHA256\n" . $amzDate . "\n" . $scope . "\n" . hash('sha256', $canonicalRequest);
+	$signingKey = s3_signature_key($secretKey, $date, $region, 's3');
+	$signature = hash_hmac('sha256', $stringToSign, $signingKey);
+	$authorization = 'AWS4-HMAC-SHA256 Credential=' . $accessKey . '/' . $scope . ', SignedHeaders=' . $signedHeaders . ', Signature=' . $signature;
+
+	$fp = fopen($file, 'rb');
+	if(!$fp){
+		return [false, '', '无法读取临时文件'];
+	}
+	$ch = curl_init($url);
+	curl_setopt($ch, CURLOPT_UPLOAD, true);
+	curl_setopt($ch, CURLOPT_INFILE, $fp);
+	curl_setopt($ch, CURLOPT_INFILESIZE, filesize($file));
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+	curl_setopt($ch, CURLOPT_HTTPHEADER, [
+		'Authorization: ' . $authorization,
+		'Content-Type: ' . $contentType,
+		'Host: ' . $requestHost,
+		'x-amz-content-sha256: ' . $payloadHash,
+		'x-amz-date: ' . $amzDate
+	]);
+	$response = curl_exec($ch);
+	$errno = curl_errno($ch);
+	$error = curl_error($ch);
+	$status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+	curl_close($ch);
+	fclose($fp);
+
+	if($errno){
+		return [false, '', $error];
+	}
+	if($status < 200 || $status >= 300){
+		return [false, '', 'HTTP '.$status.' '.$response];
+	}
+
+	$publicUrl = $domain ? rtrim($domain, '/') . '/' . $encodedKey : $url;
+	return [true, $publicUrl, ''];
+}
+function s3_uri_encode($value){
+	$parts = explode('/', $value);
+	foreach($parts as $i=>$part){
+		$parts[$i] = rawurlencode($part);
+	}
+	return implode('/', $parts);
+}
+function s3_signature_key($key, $date, $region, $service){
+	$kDate = hash_hmac('sha256', $date, 'AWS4' . $key, true);
+	$kRegion = hash_hmac('sha256', $region, $kDate, true);
+	$kService = hash_hmac('sha256', $service, $kRegion, true);
+	return hash_hmac('sha256', 'aws4_request', $kService, true);
 }

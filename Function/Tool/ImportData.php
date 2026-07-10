@@ -77,7 +77,7 @@ if($oldType == 'ssnhV3'){
 			`HeadUrl`="QQ:'.daddslashes($row['qq']).'",
 			`UserData`="'.daddslashes(json_encode($tmp)).'"';
 		if($Mysql->query($sql)){
-			$userIdDist[(int)$row['uid']] = mysqli_insert_id($Mysql->link);
+			$userIdDist[(int)$row['uid']] = $Mysql->insert_id();
 			$log[]='<font color=green>导入成功√</font></p>';
 			$successCount['user']++;
 		}else{
@@ -91,7 +91,7 @@ if($oldType == 'ssnhV3'){
 	$log[]='<h2><font color=blue>导入照片 ... </font></h2>';
 	
 	$Mysql->query("INSERT INTO `xlch_image_dir` (`Name`, `Bewrite`, `CreaterId`, `AnybodyUpload`, `AddDate`) VALUES ('导入的相册', '从 似水年华V3 导入的相册', '1', '1', now());");
-	$NewImageDir=mysqli_insert_id($Mysql->link);
+	$NewImageDir=$Mysql->insert_id();
 	
 	$result = $oldDB->query('select * from '.$oldPrefix.'photo');
 	while ($row = $oldDB->fetch($result)){

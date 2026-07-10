@@ -8,13 +8,13 @@ if(!$MysqlInfo){
 		"Text"=>"您第一次使用本程序，未配置数据库等信息。<br>正在为您跳转...<script>setTimeout(function(){location.href='/Install'},3000)</script>",
 	));
 }
-$Mysql=new DB($MysqlInfo["Ip"], $MysqlInfo["Username"], $MysqlInfo["Password"],$MysqlInfo["Database"],$MysqlInfo["Port"]);
+$Mysql=new DB($MysqlInfo);
 if(!$Mysql->link){
 	SysInfo(array(
 		"Title"=>"XlchMysql错误",
 		"Code"=>"50030",
 		"Info"=>"连接数据库失败",
-		"Text"=>"1.数据库信息有误,请编辑[Core/Config/Mysql.php]<br>2.网络问题",
+		"Text"=>"1.数据库信息有误,请编辑[Core/WebApp/Config/Mysql/Mysql.php]<br>2.网络或文件权限问题<br>3.".$Mysql->error(),
 	));
 }
 define("ZT",$MysqlInfo["QZ"]);

@@ -41,11 +41,14 @@ return <<<FlandreStudio_JSON
         "Color": "blue",
         "ImageDirOnlyAdmin": false,
         "ImageUpload": 0,
-        "Qiniu": {
+        "S3": {
+            "endpoint": "",
+            "region": "auto",
             "accessKey": "",
             "secretKey": "",
             "bucket": "",
-            "domain": ""
+            "domain": "",
+            "pathStyle": false
         }
     },
     "SysCode": "6317c506b13f8b10ac79de47961d3d3b",

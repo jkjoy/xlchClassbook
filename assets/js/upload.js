@@ -4,7 +4,7 @@ Urls = [];
 		0 = 本地服务器
 		1 = 搜狐畅言图床
 		2 = sm.ms
-		3 = Qiniu
+		3 = S3
 	*/
 	
 	switch(uploadType){

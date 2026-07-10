@@ -34,7 +34,7 @@ function SafeLog($method,$key,$value,$match){
 			'POST'=>$_POST,
 			'COOKIE'=>$_COOKIE
 		], 
-		'time' => strftime("%Y-%m-%d %H:%M:%S"), 
+		'time' => date("Y-m-d H:i:s"),
 		'page' => $_SERVER["PHP_SELF"], 
 		'method' => $method, 
 		'rkey' => $key, 

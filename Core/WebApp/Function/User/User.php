@@ -1,5 +1,5 @@
 <?php
-if($_COOKIE['xlch_token']){ //如果Cookie不为空
+if(!empty($_COOKIE['xlch_token'])){ //如果Cookie不为空
 	$Logout=false;
 	$data=authcode(rc4($WebConfig["SysCode"],base64_decode($_COOKIE['xlch_token'])),"DECODE",$WebConfig["SysCode"]);//Base64->Rc4->Authcode解密
 	list($TmpUsername, $TmpToken, $TmpToken2) = explode("\t", $data); //还原数据
@@ -18,7 +18,7 @@ if($_COOKIE['xlch_token']){ //如果Cookie不为空
 				} else {
 					//封禁状态
 					$Logout=true;
-					if($Status==='Ban'){
+					if($row['Status']==='Ban'){
 						$LogoutMsg="禁止登录：你已被封禁！！！";
 					}else{
 						$LogoutMsg='禁止登录：'.$row["Status"];
@@ -51,7 +51,7 @@ function Logout(){
 }
 function IsLogin(){
 	global $UserInfo;
-	if($UserInfo["ID"]<>""){
+	if(isset($UserInfo["ID"]) && $UserInfo["ID"]<>""){
 		return true;
 	}else{
 		return false;

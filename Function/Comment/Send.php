@@ -45,7 +45,7 @@ if($WebConfig['FuckRobot']['Comment']['Open'] && $UserGroup['Type'] != 'Admin'){
 
 if($CommentType == '0'){
 	$Mysql->query('INSERT INTO `xlch_comment` set `UserId` = '.$UserId.', `Type` = "0", `Text`="'.$Text.'" , `AddDate` = "'.$Date.'"');
-	$CommentId=mysqli_insert_id($Mysql->link);
+	$CommentId=$Mysql->insert_id();
 }else if($CommentType == '1'){
 	if(!$Mysql->get_row('select * from xlch_comment where ID = "'.$CommentId.'" and Type != 1')){
 		exit(json_encode([
@@ -54,7 +54,7 @@ if($CommentType == '0'){
 		]));
 	}
 	$Mysql->query('INSERT INTO `xlch_comment` set `UserId` = '.$UserId.', `Type` = 1, `To` = "'.$CommentId.'", `Text`="'.$Text.'", `AddDate` = "'.$Date.'"');
-	$CommentId=mysqli_insert_id($Mysql->link);
+	$CommentId=$Mysql->insert_id();
 }else if($CommentType == '2'){
 	if(!$Mysql->get_row('select * from xlch_user where ID = "'.$CommentId.'"')){
 		exit(json_encode([
@@ -63,7 +63,7 @@ if($CommentType == '0'){
 		]));
 	}
 	$Mysql->query('INSERT INTO `xlch_comment` set `UserId` = '.$UserId.', `Type` = 2, `To` = "'.$CommentId.'", `Text`="'.$Text.'", `AddDate` = "'.$Date.'" , `Private` = "'.$IsPrivate.'"');
-	$CommentId=mysqli_insert_id($Mysql->link);
+	$CommentId=$Mysql->insert_id();
 }else if($CommentType == '3'){
 	if(!$Mysql->get_row('select * from xlch_image_dir where ID = "'.$CommentId.'"')){
 		exit(json_encode([
@@ -71,8 +71,8 @@ if($CommentType == '0'){
 			'Message'=>'发送相册不存在！'
 		]));
 	}
-	$Mysql->query('INSERT INTO `xlch_comment` set `UserId` = '.$UserId.', `Type` = 3, `To` = "'.$CommentId.'", `Text`="'.$$Text.'", `AddDate` = "'.$Date.'"');
-	$CommentId=mysqli_insert_id($Mysql->link);
+	$Mysql->query('INSERT INTO `xlch_comment` set `UserId` = '.$UserId.', `Type` = 3, `To` = "'.$CommentId.'", `Text`="'.$Text.'", `AddDate` = "'.$Date.'"');
+	$CommentId=$Mysql->insert_id();
 }else{
 	exit(json_encode([
 		'Code'=>'-1',

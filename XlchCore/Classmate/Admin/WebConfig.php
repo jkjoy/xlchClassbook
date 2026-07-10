@@ -3,6 +3,17 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 
 define('PageName','控制台 - 站点配置');
 if($Type == 'Save'){
+	if(!isset($WebConfig['Option']['S3'])){
+		$WebConfig['Option']['S3'] = [
+			'endpoint'=>'',
+			'region'=>'auto',
+			'accessKey'=>'',
+			'secretKey'=>'',
+			'bucket'=>'',
+			'domain'=>'',
+			'pathStyle'=>false
+		];
+	}
 	// 站点信息 ---
 	/* 站点名称 */			if(isset($_POST['Info_WebName']))$WebConfig['Info']['WebName']=htmlspecialchars($_POST['Info_WebName']);
 	/* SEO_站点标题 */		if(isset($_POST['SEO_Title']))$WebConfig['SEO']['Title']=htmlspecialchars($_POST['SEO_Title']);
@@ -10,17 +21,20 @@ if($Type == 'Save'){
 	/* SEO_站点关键字 */	if(isset($_POST['SEO_Keywords']))$WebConfig['SEO']['Keywords']=htmlspecialchars($_POST['SEO_Keywords']);
 	
 	// 功能设置 ---
-	/* 启用注册功能 */		$WebConfig['Option']['Register']=($_POST['Option_Register'] == 'Checked' ? true : false);
+	/* 启用注册功能 */		$WebConfig['Option']['Register']=(isset($_POST['Option_Register']) && $_POST['Option_Register'] == 'Checked' ? true : false);
 	/* 班级密码 */			if(isset($_POST['Option_RegisterPassword']))$WebConfig['Option']['RegisterPassword']=htmlspecialchars($_POST['Option_RegisterPassword']);
-	/* 管理员能创建相册 */	$WebConfig['Option']['ImageDirOnlyAdmin']=($_POST['Option_ImageDirOnlyAdmin'] == 'Checked' ? true : false);
+	/* 管理员能创建相册 */	$WebConfig['Option']['ImageDirOnlyAdmin']=(isset($_POST['Option_ImageDirOnlyAdmin']) && $_POST['Option_ImageDirOnlyAdmin'] == 'Checked' ? true : false);
 	/* 标题栏配色 */		if(isset($_POST['Option_Color']))$WebConfig['Option']['Color']=htmlspecialchars($_POST['Option_Color']);
-	/* 上传照片到 */		$WebConfig['Option']['ImageUpload']=(in_array($_POST['Option_ImageUpload'],['0','1','2','3']) ? (int)$_POST['Option_ImageUpload'] : 0);
+	/* 上传照片到 */		$WebConfig['Option']['ImageUpload']=(isset($_POST['Option_ImageUpload']) && in_array($_POST['Option_ImageUpload'],['0','1','2','3']) ? (int)$_POST['Option_ImageUpload'] : 0);
 	
-	// 站点信息 ---
-	/* accessKey */			if(isset($_POST['Option_Qiniu_accessKey']))$WebConfig['Option']['Qiniu']['accessKey']=htmlspecialchars($_POST['Option_Qiniu_accessKey']);
-	/* secretKey */			if(isset($_POST['Option_Qiniu_secretKey']))$WebConfig['Option']['Qiniu']['secretKey']=htmlspecialchars($_POST['Option_Qiniu_secretKey']);
-	/* bucket */			if(isset($_POST['Option_Qiniu_bucket']))$WebConfig['Option']['Qiniu']['bucket']=htmlspecialchars($_POST['Option_Qiniu_bucket']);
-	/* domain */			if(isset($_POST['Option_Qiniu_domain']))$WebConfig['Option']['Qiniu']['domain']=htmlspecialchars($_POST['Option_Qiniu_domain']);
+	// S3 兼容存储 ---
+	/* endpoint */			if(isset($_POST['Option_S3_endpoint']))$WebConfig['Option']['S3']['endpoint']=htmlspecialchars($_POST['Option_S3_endpoint']);
+	/* region */			if(isset($_POST['Option_S3_region']))$WebConfig['Option']['S3']['region']=htmlspecialchars($_POST['Option_S3_region']);
+	/* accessKey */			if(isset($_POST['Option_S3_accessKey']))$WebConfig['Option']['S3']['accessKey']=htmlspecialchars($_POST['Option_S3_accessKey']);
+	/* secretKey */			if(isset($_POST['Option_S3_secretKey']))$WebConfig['Option']['S3']['secretKey']=htmlspecialchars($_POST['Option_S3_secretKey']);
+	/* bucket */			if(isset($_POST['Option_S3_bucket']))$WebConfig['Option']['S3']['bucket']=htmlspecialchars($_POST['Option_S3_bucket']);
+	/* domain */			if(isset($_POST['Option_S3_domain']))$WebConfig['Option']['S3']['domain']=htmlspecialchars($_POST['Option_S3_domain']);
+	/* pathStyle */			$WebConfig['Option']['S3']['pathStyle']=(isset($_POST['Option_S3_pathStyle']) && $_POST['Option_S3_pathStyle'] == 'Checked' ? true : false);
 	
 	// 联系信息 ---
 	/* 管理员QQ */			if(isset($_POST['AdminInfo_QQ']))$WebConfig['AdminInfo']['QQ']=htmlspecialchars($_POST['AdminInfo_QQ']);
@@ -30,18 +44,18 @@ if($Type == 'Save'){
 	/* 站点名称 */			if(isset($_POST['Group_QQUrl']))$WebConfig['Group']['QQUrl']=htmlspecialchars($_POST['Group_QQUrl']);
 	
 	// 音乐设置 ---
-	/* 音乐播放器 */		$WebConfig['Music']['Player']=(in_array($_POST['Music_Player'],['0','1','2']) ? (int)$_POST['Music_Player'] : 0);
+	/* 音乐播放器 */		$WebConfig['Music']['Player']=(isset($_POST['Music_Player']) && in_array($_POST['Music_Player'],['0','1','2']) ? (int)$_POST['Music_Player'] : 0);
 	/* 绚丽彩虹播放器Key */	if(isset($_POST['Music_BadApplePlayer_Key']))$WebConfig['Music']['BadApplePlayer']['Key']=htmlspecialchars($_POST['Music_BadApplePlayer_Key']);
 	/* 网易ID类型 */		if(isset($_POST['Music_Type']))$WebConfig['Music']['Type']=htmlspecialchars($_POST['Music_Type']);
 	/* 网易ID值 */			if(isset($_POST['Music_Id']))$WebConfig['Music']['Id']=htmlspecialchars($_POST['Music_Id']);
-	/* 自动播放 */			$WebConfig['Music']['Auto']=($_POST['Music_Auto'] == 'Checked' ? true : false);
+	/* 自动播放 */			$WebConfig['Music']['Auto']=(isset($_POST['Music_Auto']) && $_POST['Music_Auto'] == 'Checked' ? true : false);
 	
 	
 	// 防灌水 ---
-	/* 开启留言频率限制 */	$WebConfig['FuckRobot']['Comment']['Open']=($_POST['FuckRobot_Comment_Open'] == 'Checked' ? true : false);
+	/* 开启留言频率限制 */	$WebConfig['FuckRobot']['Comment']['Open']=(isset($_POST['FuckRobot_Comment_Open']) && $_POST['FuckRobot_Comment_Open'] == 'Checked' ? true : false);
 	/* 1小时内留言数 */		if(isset($_POST['FuckRobot_Comment_Send']))$WebConfig['FuckRobot']['Comment']['Send']=htmlspecialchars($_POST['FuckRobot_Comment_Send']);
 	/* 1小时内回复数 */		if(isset($_POST['FuckRobot_Comment_Reply']))$WebConfig['FuckRobot']['Comment']['Reply']=htmlspecialchars($_POST['FuckRobot_Comment_Reply']);
-	/* 开启图片频率限制 */	$WebConfig['FuckRobot']['Image']['Open']=($_POST['FuckRobot_Image_Open'] == 'Checked' ? true : false);
+	/* 开启图片频率限制 */	$WebConfig['FuckRobot']['Image']['Open']=(isset($_POST['FuckRobot_Image_Open']) && $_POST['FuckRobot_Image_Open'] == 'Checked' ? true : false);
 	/* 1天最多相册数 */		if(isset($_POST['FuckRobot_Image_Dir']))$WebConfig['FuckRobot']['Image']['Dir']=htmlspecialchars($_POST['FuckRobot_Image_Dir']);
 	/* 1小时最多照片数 */	if(isset($_POST['FuckRobot_Image_Pic']))$WebConfig['FuckRobot']['Image']['Pic']=htmlspecialchars($_POST['FuckRobot_Image_Pic']);
 	/* 照片最大上传大小 */	if(isset($_POST['FuckRobot_Image_Size']))$WebConfig['FuckRobot']['Image']['Size']=htmlspecialchars($_POST['FuckRobot_Image_Size']);

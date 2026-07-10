@@ -1,5 +1,14 @@
 <?php
 if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Powered By Xlch-AdminPHP');
+$WebConfig['Option']['S3'] = isset($WebConfig['Option']['S3']) ? $WebConfig['Option']['S3'] : [
+	'endpoint'=>'',
+	'region'=>'auto',
+	'accessKey'=>'',
+	'secretKey'=>'',
+	'bucket'=>'',
+	'domain'=>'',
+	'pathStyle'=>false
+];
 ?>
 <?php include(T('_Common/Header')); ?>
 <div class="container">
@@ -136,7 +145,7 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 											<div class="radio">
 												<label class="radio">
 													<input type="radio" <?=($WebConfig['Option']['ImageUpload'] == 3 ? 'checked' : '')?> name="Option_ImageUpload" value="3">
-													<i class="input-helper"></i>七牛云存储
+													<i class="input-helper"></i>S3 兼容存储
 												</label>
 											</div>
 											<p>温馨提示：为了数据安全起见，我们<b>非常不建议</b>将您与同学的照片存放在公共图床。</p>
@@ -148,34 +157,61 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 									<hr></hr>
 									<div id="Option_ImageUpload_3" style="display:<?=($WebConfig['Option']['ImageUpload'] == 3 ? 'show' : 'none'); ?>">
 										<div class="form-group">
-											<label for="Option_Qiniu_accessKey" class="col-sm-2 control-label">accessKey</label>
+											<label for="Option_S3_endpoint" class="col-sm-2 control-label">Endpoint</label>
 											<div class="col-sm-10">
 												<div class="fg-line">
-													<input type="text" class="form-control input-sm" name="Option_Qiniu_accessKey" id="Option_Qiniu_accessKey" placeholder="" value="<?=$WebConfig['Option']['Qiniu']['accessKey']?>">
+													<input type="text" class="form-control input-sm" name="Option_S3_endpoint" id="Option_S3_endpoint" placeholder="https://s3.amazonaws.com 或 https://oss.example.com" value="<?=$WebConfig['Option']['S3']['endpoint']?>">
 												</div>
 											</div>
 										</div>
 										<div class="form-group">
-											<label for="Option_Qiniu_secretKey" class="col-sm-2 control-label">secretKey</label>
+											<label for="Option_S3_region" class="col-sm-2 control-label">Region</label>
 											<div class="col-sm-10">
 												<div class="fg-line">
-													<input type="text" class="form-control input-sm" name="Option_Qiniu_secretKey" id="Option_Qiniu_secretKey" placeholder="" value="<?=$WebConfig['Option']['Qiniu']['secretKey']?>">
+													<input type="text" class="form-control input-sm" name="Option_S3_region" id="Option_S3_region" placeholder="auto / us-east-1 / cn-east-1" value="<?=$WebConfig['Option']['S3']['region']?>">
 												</div>
 											</div>
 										</div>
 										<div class="form-group">
-											<label for="Option_Qiniu_bucket" class="col-sm-2 control-label">bucket</label>
+											<label for="Option_S3_accessKey" class="col-sm-2 control-label">Access Key</label>
 											<div class="col-sm-10">
 												<div class="fg-line">
-													<input type="text" class="form-control input-sm" name="Option_Qiniu_bucket" id="Option_Qiniu_bucket" placeholder="" value="<?=$WebConfig['Option']['Qiniu']['bucket']?>">
+													<input type="text" class="form-control input-sm" name="Option_S3_accessKey" id="Option_S3_accessKey" placeholder="" value="<?=$WebConfig['Option']['S3']['accessKey']?>">
 												</div>
 											</div>
 										</div>
 										<div class="form-group">
-											<label for="Option_Qiniu_domain" class="col-sm-2 control-label">domain</label>
+											<label for="Option_S3_secretKey" class="col-sm-2 control-label">Secret Key</label>
 											<div class="col-sm-10">
 												<div class="fg-line">
-													<input type="text" class="form-control input-sm" name="Option_Qiniu_domain" id="Option_Qiniu_domain" placeholder="" value="<?=$WebConfig['Option']['Qiniu']['domain']?>">
+													<input type="text" class="form-control input-sm" name="Option_S3_secretKey" id="Option_S3_secretKey" placeholder="" value="<?=$WebConfig['Option']['S3']['secretKey']?>">
+												</div>
+											</div>
+										</div>
+										<div class="form-group">
+											<label for="Option_S3_bucket" class="col-sm-2 control-label">Bucket</label>
+											<div class="col-sm-10">
+												<div class="fg-line">
+													<input type="text" class="form-control input-sm" name="Option_S3_bucket" id="Option_S3_bucket" placeholder="" value="<?=$WebConfig['Option']['S3']['bucket']?>">
+												</div>
+											</div>
+										</div>
+										<div class="form-group">
+											<label for="Option_S3_domain" class="col-sm-2 control-label">访问域名</label>
+											<div class="col-sm-10">
+												<div class="fg-line">
+													<input type="text" class="form-control input-sm" name="Option_S3_domain" id="Option_S3_domain" placeholder="https://cdn.example.com，可留空" value="<?=$WebConfig['Option']['S3']['domain']?>">
+												</div>
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="col-sm-offset-2 col-sm-10">
+												<div class="checkbox">
+													<label>
+														<input type="checkbox" value="Checked" name="Option_S3_pathStyle" <?=($WebConfig['Option']['S3']['pathStyle'] ? 'checked' : '')?>>
+														<i class="input-helper"></i>
+														使用 path-style 地址
+													</label>
 												</div>
 											</div>
 										</div>
