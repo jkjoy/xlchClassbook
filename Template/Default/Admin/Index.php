@@ -142,15 +142,6 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 					</div>
 				</div>
 			</div>
-			<div class="card">
-				<div class="card-header bgm-red m-b-20">
-					<h2>绚丽彩虹公告<small>查看关于绚丽彩虹工作室的最新消息。</small></h2>
-				</div>
-				<div class="card-body card-padding row">
-					<h1>_(:з)∠)_ 行了，网站挂了，暂时懒得修了...<br/><br/></h1>
-					<p>相关说明：<b><a href="https://github.com/xlch88/xlchClassbook/blob/master/README.md" target="_blank">https://github.com/xlch88/xlchClassbook/blob/master/README.md</a></b><br/><br/></p>
-				</div>
-			</div>
 		</div>
 	</div>
 </div>

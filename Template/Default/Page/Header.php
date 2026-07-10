@@ -2,36 +2,6 @@
 if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Powered By Xlch-AdminPHP');
 ?>
 <?php include(T('_Common/Header'));?>
-<?php if($UInfo['UserData']['Public']['Music']){ ?>
-<script>
-if(typeof(nowPlayId) == "undefined") var nowPlayId = 0;
-$(function(){
-	var newId = '<?=$UInfo['UserData']['Public']['Music']?>';
-	if(nowPlayId != newId){
-		notify('正在播放我的主页音乐！','info');
-		nowPlayId = newId;
-		
-		<?php if($WebConfig['Music']['Player'] == 1){ ?>
-		$.ajax({
-			url:'http://api.badapple.top/new/music.php?do=parse&type=wy&id=',
-			method:'get',
-			data:{
-				id:nowPlayId
-			},
-			dataType:'jsonp',
-			success:function(data){
-				console.log(data);
-				data['song_id'] = '_'+data['song_id'];
-				BadApplePlayer.Play(data);
-			}
-		});
-		<?php }else{ ?>
-		$('#MusicPlayer').attr('src',"//music.163.com/outchain/player?type=2&id="+nowPlayId+"&auto=1&height=32");
-		<?php } ?>
-	}
-});
-</script>
-<?php } ?>
 <div class="container container-alt">
 	<div class="block-header">
 		<h2>

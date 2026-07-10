@@ -56,27 +56,6 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 					</li>
 					<li class="pull-right">
 						<ul class="hi-menu">
-							<?php if($WebConfig['Music']['Player'] == 2){ ?>
-							<li class="dropdown">
-								<a data-toggle="dropdown" href="#">
-									<span class="musicbar animate inline m-l-sm">
-										<span class="bar1 a1 bg-primary lter"></span>
-										<span class="bar2 a2 bg-info lt"></span>
-										<span class="bar3 a3 bg-success"></span>
-										<span class="bar4 a4 bg-warning dk"></span>
-										<span class="bar5 a5 bg-danger dker"></span>
-									</span>
-								</a>
-								<div class="dropdown-menu dropdown-menu-lg pull-right">
-									<div class="list-group him-notification">
-										<div class="lg-header">
-											音乐
-										</div>
-										<iframe id="MusicPlayer" nowid="" frameborder="no" style="position:relative;top:-5px;height:52px;width:100%;" src="//music.163.com/outchain/player?type=<?=$WebConfig['Music']['Type']?>&id=<?=$WebConfig['Music']['Id']?>&auto=<?=$WebConfig['Music']['Auto']?>&height=32"></iframe>
-									</div>
-								</div>
-							</li>
-							<?php } ?>
 							<li>
 								<a title="首页" href="<?=U('Index')?>">
 									<i class="him-icon fa fa-home"></i>

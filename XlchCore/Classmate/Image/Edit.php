@@ -3,7 +3,8 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 
 define('PageName','相册管理');
 if($Type=='Edit' or $Type=='SaveEdit' or $Type=='Delete'){
-	$UploadType = ['File','Url','SmMs','S3'];
+	$UploadType = [0=>'File', 3=>'S3'];
+	$WebConfig['Option']['ImageUpload'] = isset($UploadType[$WebConfig['Option']['ImageUpload']]) ? $WebConfig['Option']['ImageUpload'] : 0;
 	if(!($I['Image']['Dir']=$Mysql->get_row('select * from xlch_image_dir where ID = "'.daddslashes($val).'"'))){
 		$RInfo=[
 			'T'=>'错误',

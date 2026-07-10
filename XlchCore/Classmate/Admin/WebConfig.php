@@ -25,7 +25,7 @@ if($Type == 'Save'){
 	/* 班级密码 */			if(isset($_POST['Option_RegisterPassword']))$WebConfig['Option']['RegisterPassword']=htmlspecialchars($_POST['Option_RegisterPassword']);
 	/* 管理员能创建相册 */	$WebConfig['Option']['ImageDirOnlyAdmin']=(isset($_POST['Option_ImageDirOnlyAdmin']) && $_POST['Option_ImageDirOnlyAdmin'] == 'Checked' ? true : false);
 	/* 标题栏配色 */		if(isset($_POST['Option_Color']))$WebConfig['Option']['Color']=htmlspecialchars($_POST['Option_Color']);
-	/* 上传照片到 */		$WebConfig['Option']['ImageUpload']=(isset($_POST['Option_ImageUpload']) && in_array($_POST['Option_ImageUpload'],['0','1','2','3']) ? (int)$_POST['Option_ImageUpload'] : 0);
+	/* 上传照片到 */		$WebConfig['Option']['ImageUpload']=(isset($_POST['Option_ImageUpload']) && in_array($_POST['Option_ImageUpload'],['0','3']) ? (int)$_POST['Option_ImageUpload'] : 0);
 	
 	// S3 兼容存储 ---
 	/* endpoint */			if(isset($_POST['Option_S3_endpoint']))$WebConfig['Option']['S3']['endpoint']=htmlspecialchars($_POST['Option_S3_endpoint']);
@@ -42,14 +42,6 @@ if($Type == 'Save'){
 	/* 管理员邮箱 */		if(isset($_POST['AdminInfo_Email']))$WebConfig['AdminInfo']['Email']=htmlspecialchars($_POST['AdminInfo_Email']);
 	/* 站点名称 */			if(isset($_POST['Group_QQ']))$WebConfig['Group']['QQ']=htmlspecialchars($_POST['Group_QQ']);
 	/* 站点名称 */			if(isset($_POST['Group_QQUrl']))$WebConfig['Group']['QQUrl']=htmlspecialchars($_POST['Group_QQUrl']);
-	
-	// 音乐设置 ---
-	/* 音乐播放器 */		$WebConfig['Music']['Player']=(isset($_POST['Music_Player']) && in_array($_POST['Music_Player'],['0','1','2']) ? (int)$_POST['Music_Player'] : 0);
-	/* 绚丽彩虹播放器Key */	if(isset($_POST['Music_BadApplePlayer_Key']))$WebConfig['Music']['BadApplePlayer']['Key']=htmlspecialchars($_POST['Music_BadApplePlayer_Key']);
-	/* 网易ID类型 */		if(isset($_POST['Music_Type']))$WebConfig['Music']['Type']=htmlspecialchars($_POST['Music_Type']);
-	/* 网易ID值 */			if(isset($_POST['Music_Id']))$WebConfig['Music']['Id']=htmlspecialchars($_POST['Music_Id']);
-	/* 自动播放 */			$WebConfig['Music']['Auto']=(isset($_POST['Music_Auto']) && $_POST['Music_Auto'] == 'Checked' ? true : false);
-	
 	
 	// 防灌水 ---
 	/* 开启留言频率限制 */	$WebConfig['FuckRobot']['Comment']['Open']=(isset($_POST['FuckRobot_Comment_Open']) && $_POST['FuckRobot_Comment_Open'] == 'Checked' ? true : false);

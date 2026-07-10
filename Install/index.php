@@ -4,6 +4,42 @@ header("Content-Type: text/html; charset=UTF-8");
 header("Powered-By: Xlch-AdminPHP");
 setcookie("xlch_token", '', time()-3600, '/');
 
+function root_path($path = ''){
+	return dirname(__DIR__) . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, ltrim($path, '/\\'));
+}
+function install_path($path = ''){
+	return __DIR__ . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, ltrim($path, '/\\'));
+}
+function write_install_file($relativePath, $content, $displayPath){
+	$path = root_path($relativePath);
+	$dir = dirname($path);
+	if(!is_dir($dir)){
+		Logg('写入文件['.$displayPath.']失败，目录不存在：'.$dir);
+		return false;
+	}
+	if(file_put_contents($path, $content) === FALSE){
+		$firstError = error_get_last();
+		if(is_file($path)){
+			@chmod($path, 0666);
+		}else{
+			@chmod($dir, 0777);
+		}
+		if(file_put_contents($path, $content) === FALSE){
+			$tmpPath = $path . '.tmp.' . md5(uniqid('', true));
+			if(file_put_contents($tmpPath, $content) !== FALSE && @rename($tmpPath, $path)){
+				return true;
+			}
+			if(is_file($tmpPath)){
+				@unlink($tmpPath);
+			}
+			$error = error_get_last();
+			Logg('写入文件['.$displayPath.']失败，目标路径：'.$path.($error ? '，'.$error['message'] : ($firstError ? '，'.$firstError['message'] : '，请检查权限')));
+			return false;
+		}
+	}
+	return true;
+}
+
 if(version_compare('7.0', PHP_VERSION, ">")) {
 	die('请使用PHP 7.0 或更高的版本运行本程序！<hr></hr>Powered By AdminPHP! (C) Flandre-Studio.cn');
 }
@@ -133,7 +169,19 @@ function Install(){
 		],
 		[
 			'Name'=>'文件写入权限',
-			'Is'=>(new_is_writeable('../Upload') && new_is_writeable('..'))
+			'Is'=>(new_is_writeable(root_path('Upload')) && new_is_writeable(root_path()))
+		],
+		[
+			'Name'=>'数据库配置目录写入权限',
+			'Is'=>new_is_writeable(root_path('Core/WebApp/Config/Mysql'))
+		],
+		[
+			'Name'=>'站点配置目录写入权限',
+			'Is'=>new_is_writeable(root_path('Core/WebApp/Config/SysConfig'))
+		],
+		[
+			'Name'=>'安装锁目录写入权限',
+			'Is'=>new_is_writeable(install_path())
 		],
 		[
 			'Name'=>'文件读取函数',
@@ -195,7 +243,7 @@ function Install(){
 			Logg(0);
 		}
 	}
-	include('../Core/WebApp/Function/Mysql/db.class.php');
+	include(root_path('Core/WebApp/Function/Mysql/db.class.php'));
 	
 	Logg('写入数据库',1);
 	Logg('连接数据库',2);
@@ -209,14 +257,14 @@ function Install(){
 		'QZ' => 'xlch'
 	];
 	if($dbType == 'sqlite'){
-		if(!is_dir('../data')){
-			mkdir('../data', 0777, true);
+		if(!is_dir(root_path('data'))){
+			mkdir(root_path('data'), 0777, true);
 		}
-		if(!is_file('../data/.htaccess')){
-			file_put_contents('../data/.htaccess', "Require all denied\r\nDeny from all\r\n");
+		if(!is_file(root_path('data/.htaccess'))){
+			file_put_contents(root_path('data/.htaccess'), "Require all denied\r\nDeny from all\r\n");
 		}
-		if(!is_file('../data/web.config')){
-			file_put_contents('../data/web.config', "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<configuration><system.webServer><security><requestFiltering><hiddenSegments><add segment=\"data\" /></hiddenSegments></requestFiltering></security></system.webServer></configuration>");
+		if(!is_file(root_path('data/web.config'))){
+			file_put_contents(root_path('data/web.config'), "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<configuration><system.webServer><security><requestFiltering><hiddenSegments><add segment=\"data\" /></hiddenSegments></requestFiltering></security></system.webServer></configuration>");
 		}
 		$MysqlInfoArray['Ip'] = '';
 		$MysqlInfoArray['Port'] = '';
@@ -226,7 +274,7 @@ function Install(){
 	}
 	$ConnectMysqlInfo = $MysqlInfoArray;
 	if($dbType == 'sqlite'){
-		$ConnectMysqlInfo['Database'] = realpath('..') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $MysqlInfoArray['Database']);
+		$ConnectMysqlInfo['Database'] = root_path($MysqlInfoArray['Database']);
 	}
 	$Mysql=new DB($ConnectMysqlInfo);
 	
@@ -238,8 +286,8 @@ function Install(){
 	}
 	
 	Logg('安装数据库',1);
-	include('../Core/Tool/dbSyncTool.php');
-	$xlchclassbookSyncData = include('dbSync.data.php');
+	include(root_path('Core/Tool/dbSyncTool.php'));
+	$xlchclassbookSyncData = include(install_path('dbSync.data.php'));
 	$syncData = $xlchclassbookSyncData['data'];
 	$option = $xlchclassbookSyncData['option'];
 
@@ -253,17 +301,16 @@ function Install(){
 	Logg('写入配置文件',1);
 	Logg('保存数据库信息',2);
 	$MysqlInfo="<?php\r\nreturn <<<FlandreStudio_JSON\r\n".json_encode($MysqlInfoArray, JSON_PRETTY_PRINT + JSON_UNESCAPED_UNICODE)."\r\nFlandreStudio_JSON;\r\n?>";
-	if(file_put_contents('../Core/WebApp/Config/Mysql/Mysql.php',$MysqlInfo) === FALSE){
-		Logg('写入文件[Core/WebApp/Config/Mysql/Mysql.php]失败，请检查权限');
+	if(!write_install_file('Core/WebApp/Config/Mysql/Mysql.php', $MysqlInfo, 'Core/WebApp/Config/Mysql/Mysql.php')){
 		return false;
 	}else{
 		Logg(0);
 	}
 	
 	Logg('保存网站配置文件',2);
-	$WebConfig = json_decode(include('../Core/WebApp/Config/SysConfig/Config.php'),true);
+	$WebConfig = json_decode(include(root_path('Core/WebApp/Config/SysConfig/Config.php')),true);
 	if(!$WebConfig){
-		$WebConfig = json_decode(include('../Core/WebApp/Config/SysConfig/Config.php'),true);
+		$WebConfig = json_decode(include(root_path('Core/WebApp/Config/SysConfig/Config.php')),true);
 	}
 	
 	$WebConfig['Info']['WebName']=$_POST['WebConfig_WebName'];
@@ -272,8 +319,7 @@ function Install(){
 	$WebConfig['Option']['RegisterPassword']=$_POST['WebConfig_RegisterPassword'];
 	$WebConfig['SysCode']=md5(RandString(256));
 	
-	if(file_put_contents('../Core/WebApp/Config/SysConfig/Config.php',"<?php\r\nreturn <<<FlandreStudio_JSON\r\n".json_encode($WebConfig,JSON_PRETTY_PRINT + JSON_UNESCAPED_UNICODE)."\r\nFlandreStudio_JSON;\r\n?>") === FALSE){
-		Logg('写入文件[Core/WebApp/Config/SysConfig/Config.php]失败，请检查权限');
+	if(!write_install_file('Core/WebApp/Config/SysConfig/Config.php', "<?php\r\nreturn <<<FlandreStudio_JSON\r\n".json_encode($WebConfig,JSON_PRETTY_PRINT + JSON_UNESCAPED_UNICODE)."\r\nFlandreStudio_JSON;\r\n?>", 'Core/WebApp/Config/SysConfig/Config.php')){
 		return false;
 	}else{
 		Logg(0);
@@ -292,9 +338,9 @@ function Install(){
 		Logg('创建管理员账户',2);
 		
 		if($_POST['Admin_Username'] == '悦咚')
-			$DefaultUserData=include('yuedong.php');
+			$DefaultUserData=include(install_path('yuedong.php'));
 		else
-			$DefaultUserData=json_decode(include('../Core/WebApp/Config/SysConfig/DefaultUserData.php'),true);
+			$DefaultUserData=json_decode(include(root_path('Core/WebApp/Config/SysConfig/DefaultUserData.php')),true);
 		
 		$sql='INSERT INTO `xlch_user` set
 			`Username`="'.addslashes($_POST['Admin_Username']).'" , 
@@ -333,18 +379,21 @@ function Install(){
 	$_SESSION['Tmp_Username']=$_POST['Admin_Username'];
 	$_SESSION['Tmp_Password']=$_POST['Admin_Password'];
 	
-	mkdir('../Upload/UserHead/');
+	if(!is_dir(root_path('Upload/UserHead'))){
+		mkdir(root_path('Upload/UserHead'), 0777, true);
+	}
 	
 	Logg('放置安装锁',2);
-	if(file_put_contents('./Install.lock',"这个文件是安装锁，如果您需要重新安装本程序，请删除该文件。") === FALSE){
-		Logg('写入文件[Install/Install.lock]失败，请检查权限');
+	if(file_put_contents(install_path('Install.lock'),"这个文件是安装锁，如果您需要重新安装本程序，请删除该文件。") === FALSE){
+		$error = error_get_last();
+		Logg('写入文件[Install/Install.lock]失败，目标路径：'.install_path('Install.lock').($error ? '，'.$error['message'] : '，请检查权限'));
 		return false;
 	}else{
 		Logg(0);
 	}
 	return true;
 }
-include('../Core/AdminPHP/Config/SysConfig/Version.php');
+include(root_path('Core/AdminPHP/Config/SysConfig/Version.php'));
 ?>
 <!-- 绚丽彩虹工作室 荣誉出品 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -555,8 +604,26 @@ include('../Core/AdminPHP/Config/SysConfig/Version.php');
 												<tr>
 													<td>目录写入权限</td>
 													<td>必须</td>
-													<td><?php if (new_is_writeable('../Upload') && new_is_writeable('..')) { echo '<font color="green">可用</font>'; } else { echo '<font color="red">不支持</font>'; } ?></td>
+													<td><?php if (new_is_writeable(root_path('Upload')) && new_is_writeable(root_path())) { echo '<font color="green">可用</font>'; } else { echo '<font color="red">不支持</font>'; } ?></td>
 													<td>上传图片</td>
+												</tr>
+												<tr>
+													<td>数据库配置目录写入权限</td>
+													<td>必须</td>
+													<td><?php if (new_is_writeable(root_path('Core/WebApp/Config/Mysql'))) { echo '<font color="green">可用</font>'; } else { echo '<font color="red">不支持</font>'; } ?></td>
+													<td>保存数据库连接信息</td>
+												</tr>
+												<tr>
+													<td>站点配置目录写入权限</td>
+													<td>必须</td>
+													<td><?php if (new_is_writeable(root_path('Core/WebApp/Config/SysConfig'))) { echo '<font color="green">可用</font>'; } else { echo '<font color="red">不支持</font>'; } ?></td>
+													<td>保存网站配置</td>
+												</tr>
+												<tr>
+													<td>安装目录写入权限</td>
+													<td>必须</td>
+													<td><?php if (new_is_writeable(install_path())) { echo '<font color="green">可用</font>'; } else { echo '<font color="red">不支持</font>'; } ?></td>
+													<td>写入安装锁</td>
 												</tr>
 												<tr>
 													<td>file_put_contents()</td>
@@ -598,22 +665,22 @@ include('../Core/AdminPHP/Config/SysConfig/Version.php');
 											<p>AdminPHP框架支持伪静态，开启后在地址栏显示的地址会更加美观。</p>
 											<p>如果您的空间支持伪静态，建议您开启。</p>
 										</center>
-										<?php include('../Core/AdminPHP/Function/SysFunction/SysFunction.php'); ?>
-										<?php include('../Core/AdminPHP/Config/Rewrite/Url.php'); ?>
-										<?php include('../Core/AdminPHP/Content/Url/Url.php'); ?>
+										<?php include(root_path('Core/AdminPHP/Function/SysFunction/SysFunction.php')); ?>
+										<?php include(root_path('Core/AdminPHP/Config/Rewrite/Url.php')); ?>
+										<?php include(root_path('Core/AdminPHP/Content/Url/Url.php')); ?>
 										<hr></hr>
 										<h3>您的服务器软件是：<?=$_SERVER['SERVER_SOFTWARE'];?></h3>
 										<h3>伪静态配置状态　：<font id="rewriteStatus"></font><a id="refushRewriteStatus" class="btn bgm-blue">刷新</a></h3>
 										<?php
 										switch(getServerSoft()){
 											case 'iis':
-											copy('./rewrite/web.config','../web.config');
+											copy(install_path('rewrite/web.config'), root_path('web.config'));
 										?>
 											<h4>安装程序已经自动将"web.config"文件放置到根目录。</br><b><font color=red>如果您未安装<a href="https://www.iis.net/downloads/microsoft/url-rewrite" target="_blank">IIS Rewrite(点击下载)</a>扩展，请点击链接进行下载安装。<font color=red></b></h4>
 										<?php
 											break;
 											case 'apache/kangle':
-											copy('./rewrite/.htaccess','../.htaccess');
+											copy(install_path('rewrite/.htaccess'), root_path('.htaccess'));
 										?>
 											<h4>安装程序已经自动将".htaccess"文件放置到根目录。一般情况下，伪静态已经成功配置。</h4>
 										<?php
@@ -634,15 +701,15 @@ include('../Core/AdminPHP/Config/SysConfig/Version.php');
 										<br>
 										
 										<p class="c-blue">Nginx/Tengine：</p>
-										<textarea rows=5 class="form-control"><?=file_get_contents('./rewrite/nginx.txt')?></textarea>
+										<textarea rows=5 class="form-control"><?=file_get_contents(install_path('rewrite/nginx.txt'))?></textarea>
 										<br>
 										<br>
 										<p class="c-blue">Apache/Kangle (.htaccess)：</p>
-										<textarea rows=5 class="form-control"><?=file_get_contents('./rewrite/.htaccess')?></textarea>
+										<textarea rows=5 class="form-control"><?=file_get_contents(install_path('rewrite/.htaccess'))?></textarea>
 										<br>
 										<br>
 										<p class="c-blue">IIS (web.config)：</p>
-										<textarea rows=5 class="form-control"><?=file_get_contents('./rewrite/web.config')?></textarea>
+										<textarea rows=5 class="form-control"><?=file_get_contents(install_path('rewrite/web.config'))?></textarea>
 										<br>
 										<br>
 										以上文件您可以在“Install/rewrite”文件夹找到。
@@ -689,7 +756,7 @@ define('Url_Header','');
 define('Url_Explode','/');
 define('Url_Footer','.html');
 Xlch88;
-									file_put_contents('../Core/AdminPHP/Config/Rewrite/Url.php',$rewriteConfig);
+									write_install_file('Core/AdminPHP/Config/Rewrite/Url.php', $rewriteConfig, 'Core/AdminPHP/Config/Rewrite/Url.php');
 								}
 								?>
 								<div class="card">

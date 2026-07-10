@@ -102,7 +102,5 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 		regpjax();
 		</script>
 		<!-- /Pjax -->
-		
-		<?php if($WebConfig['Music']['Player'] == 1) include(T('_Common/BadApplePlayer')); ?>
 	</body>
 </html>

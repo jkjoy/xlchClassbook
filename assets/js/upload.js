@@ -2,46 +2,11 @@ Urls = [];
 (function($) {
 	/*
 		0 = 本地服务器
-		1 = 搜狐畅言图床
-		2 = sm.ms
 		3 = S3
 	*/
 	
 	switch(uploadType){
 		case 0:
-			Upload_fileVal = 'file';
-			Upload_Url = Save_Url;
-			Upload_formData = {
-                DirId: Upload_Dir
-            };
-			Upload_success = function(file, data) {};
-			Upload_finished = function(){};
-		break;
-		
-		case 1:
-			Upload_fileVal = 'file';
-			Upload_Url = 'http://changyan.sohu.com/api/2/comment/attachment';
-			Upload_formData = {};
-			Upload_success = function(file, data) {
-				data=JSON.parse(data);
-				if(data.url != ''){
-					Urls.push(data.url);
-				}
-			};
-			Upload_finished = function(){
-				$.ajax({
-					url:Save_Url,
-					method:'post',
-					data:{
-						DirId: Upload_Dir,
-						Urls: Urls
-					}
-				});
-				Urls = [];
-			};
-		break;
-		
-		case 2:
 			Upload_fileVal = 'file';
 			Upload_Url = Save_Url;
 			Upload_formData = {

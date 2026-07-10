@@ -193,10 +193,10 @@ class DB {
 				}
 			}
 			if($columns){
-				return 'INSERT INTO ' . $m[1] . ' (' . implode(',', $columns) . ') VALUES (' . implode(',', $values) . ')';
+				return $this->sqlite_quote_mysql_strings('INSERT INTO ' . $m[1] . ' (' . implode(',', $columns) . ') VALUES (' . implode(',', $values) . ')');
 			}
 		}
-		return $sql;
+		return $this->sqlite_quote_mysql_strings($sql);
 	}
 
 	private function split_assignments($sql){
@@ -247,6 +247,58 @@ class DB {
 		}
 		if(trim($buffer) !== '') $parts[] = trim($buffer);
 		return $parts;
+	}
+
+	private function sqlite_quote_mysql_strings($sql){
+		$return = '';
+		$length = strlen($sql);
+		for($i = 0; $i < $length; $i++){
+			$char = $sql[$i];
+			if($char === '`' || $char === '\''){
+				$quote = $char;
+				$return .= $char;
+				$i++;
+				for(; $i < $length; $i++){
+					$return .= $sql[$i];
+					if($sql[$i] === '\\' && $i + 1 < $length){
+						$i++;
+						$return .= $sql[$i];
+						continue;
+					}
+					if($sql[$i] === $quote){
+						break;
+					}
+				}
+				continue;
+			}
+			if($char === '"'){
+				$value = '';
+				$i++;
+				for(; $i < $length; $i++){
+					$c = $sql[$i];
+					if($c === '\\' && $i + 1 < $length){
+						$n = $sql[$i + 1];
+						if($n === '"' || $n === '\'' || $n === '\\'){
+							$value .= $n;
+						}else if($n === '0'){
+							$value .= "\0";
+						}else{
+							$value .= '\\' . $n;
+						}
+						$i++;
+						continue;
+					}
+					if($c === '"'){
+						break;
+					}
+					$value .= $c;
+				}
+				$return .= '\'' . str_replace('\'', '\'\'', $value) . '\'';
+				continue;
+			}
+			$return .= $char;
+		}
+		return $return;
 	}
 }
 ?>

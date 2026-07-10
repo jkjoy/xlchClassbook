@@ -15,16 +15,6 @@ return <<<FlandreStudio_JSON
         "Description": "绚丽彩虹同学录是一款以简洁、高效为目的的自适应同学录，内有同学录、相册、留言板三大功能，当您真正使用之时，方能见证其功能强大。完备的加密技术确保用户资料不被窃取。",
         "Keywords": "班级同学录,简洁同学录,自适应同学录,同学录程序,电子同学录,网络同学录,同学录网站,免费同学录"
     },
-    "Music": {
-        "Type": "3",
-        "Id": "902200569",
-        "Auto": false,
-        "Disabled": false,
-        "Player": 0,
-        "BadApplePlayer": {
-            "Key": "gcbs"
-        }
-    },
     "AdminInfo": {
         "QQ": "787700998",
         "WeChat": "ZeroDay9",

@@ -1,77 +1,154 @@
 # xlchClassbook 绚丽彩虹同学录
-绚丽彩虹同学录V1.5 fix 完全无加密源码
 
-本项目Github地址：https://github.com/xlch88/xlchClassbook
+绚丽彩虹同学录是一个早期 PHP 同学录程序，包含个人主页、同学录、相册、留言板、后台管理等功能。本仓库为可运行源码版本，已做 PHP 8.x 兼容整理，并新增 SQLite 与 S3 兼容对象存储支持。
 
-## 2024-04-11 致各种“源码站”“资源站”
-盗转也就算了，Github链接都懒得附一个？对于他人劳动成果不尊重的小学生行为时隔多年仍然没有一丁点转变。
+原项目地址：https://github.com/xlch88/xlchClassbook
+
+## 当前特性
+
+- 支持 PHP 8.x，按 PHP 8.5 向上兼容方向清理旧语法。
+- 支持 MySQL / MariaDB。
+- 支持 SQLite；安装时选择 SQLite 会自动创建 `data/` 目录，并生成随机文件名数据库。
+- 相册照片支持本地上传、URL 导入、S3 兼容对象存储。
+- 上传附件不再绑定七牛，后台改为通用 S3 兼容配置。
+- 保留原有模板、用户资料字段、用户组、侧边栏等配置方式。
+
+## 环境要求
+
+必需：
+
+- PHP 7.0 或更高版本，建议 PHP 8.1+。
+- `file_get_contents`
+- `file_put_contents`
+- `curl`
+- GD 图像处理扩展，例如 `imagecreatefromjpeg`
+- 使用 MySQL 时需要 `mysqli`
+- 使用 SQLite 时需要 `PDO` 和 `pdo_sqlite`
+
+推荐：
+
+- `ZipArchive`
+- `fsockopen`
+- Web 服务器开启伪静态支持，或按安装器提示跳过伪静态
+
+## 安装
+
+1. 将项目放到网站根目录。
+2. 确保以下目录可写：
+   - 项目根目录
+   - `Upload/`
+   - 使用 SQLite 时还需要允许程序创建 `data/`
+3. 浏览器访问 `/Install`。
+4. 按安装向导完成环境检测、伪静态配置、站点信息配置和管理员账号创建。
+5. 安装完成后会生成 `Install/Install.lock`，用于阻止重复安装。
+
+如需重新安装，删除：
+
+```text
+Install/Install.lock
+```
+
+## 数据库配置
+
+### MySQL / MariaDB
+
+安装时选择 `MySQL / MariaDB`，填写数据库地址、端口、用户名、密码和数据库名。
+
+配置文件位置：
+
+```text
+Core/WebApp/Config/Mysql/Mysql.php
+```
+
+### SQLite
+
+安装时选择 `SQLite`，无需填写数据库地址、用户名或密码。安装器会自动：
+
+- 创建 `data/` 目录
+- 生成随机数据库文件名，例如 `data/classbook_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.sqlite`
+- 写入基础访问保护文件
+- 将数据库路径保存到 `Core/WebApp/Config/Mysql/Mysql.php`
+
+请不要把 SQLite 数据库移动到可公开下载的位置。
+
+## 图片与附件上传
+
+后台路径：
+
+```text
+后台管理 -> 站点配置 -> 功能设置 -> 上传照片到
+```
+
+可选方式：
+
+- 本地服务器
+- S3 兼容存储
+
+### S3 兼容存储配置
+
+选择 `S3 兼容存储` 后填写：
+
+- `Endpoint`：对象存储接口地址，例如 `https://s3.amazonaws.com`、MinIO 地址、R2 地址等
+- `Region`：区域，例如 `us-east-1`；不确定时可填 `auto`
+- `Access Key`
+- `Secret Key`
+- `Bucket`
+- `访问域名`：可选，填写 CDN 或公开访问域名；留空时使用上传接口地址拼接访问 URL
+- `使用 path-style 地址`：MinIO 或部分兼容服务可能需要开启
+
+上传实现使用 S3 Signature V4 的单文件 `PUT` 请求，不依赖 Composer SDK。
+
+## 主要配置文件
+
+```text
+Core/WebApp/Config/SysConfig/Config.php
+```
+
+站点主配置，包含网站名称、注册开关、上传方式、S3 配置、频率限制等。
+
+```text
+Core/WebApp/Config/SysConfig/DefaultUserData.php
+```
+
+新注册用户的默认资料模板。
+
+```text
+Core/WebApp/Config/SysConfig/Info.php
+```
+
+个人资料字段配置。
+
+```text
+Core/WebApp/Config/SysConfig/Sidebar.php
+```
+
+侧边栏菜单配置。
+
+```text
+Core/WebApp/Config/SysConfig/UserGroup.php
+```
+
+用户组和权限配置。
+
+## 升级注意
+
+从旧版本升级前请备份：
+
+```text
+Core/WebApp/Config/
+Upload/
+data/
+```
+
+如果旧站点使用七牛配置，升级后需要进入后台重新配置为 S3 兼容存储。旧配置中的 `Option.Qiniu` 不再作为上传入口使用。
 
 ## 问题反馈
-本项目是开源免费项目，_**不 提 供 一 对 一 技 术 支 持**_。请自行阅读本文档下方的【使用手册】、【配置文件简单说明】及源代码。如仍有疑问请善用Github官方提供的issues功能进行反馈，不要通过加个人QQ的方式来寻求使用帮助。
 
-## 2022-06-13 写在前面
-这是一个2016~2017年的项目，大部分源代码的更新和维护时间在2017年左右。
+这是开源免费项目，不提供一对一技术支持。请先阅读本文档和源码；如仍有问题，建议通过 GitHub Issues 反馈。
 
-代码质量很差，毕竟几乎是作为一个php初学练手项目做的。
+## 原作者
 
-完全没有继续二次开发和继续维护的必要了，请将此源代码当shi来阅，以及，阅读中避免影响自己的心情。
+- 程序：悦咚
+- 策划：华梦
 
-目前悦咚已经是996社畜一枚了(bushi 实际上坐[单间还摆着三个显示器的办公室](https://twitter.com/YueDongQwQ/status/1523598759682138112)很舒服)。
-
-虽然有大量摸鱼的时间，但是对于以前的项目总有一种心有余而力不足的感觉。也许哪天想开了就会突然爆更呢？
-
-嗯，就这样吧 :) 欢迎来关注悦咚的推特[@YueDongQwQ](https://twitter.com/YueDongQwQ) <-可能会导致某些老朋友三观裂开，所以慎点？
-
-## 说明
- - 该源码仅供学习使用，1.x版本不再更新，2.0版本正在筹划中。
- - 该源码已经去除授权限制，您可以运行在内网服务器上。
- - 该源码已经去除所有反盗版措施。
- - 可以自由修改该源码以满足您网站的需求，但不能将二次修改的源码以任何方式发布。
- - 不推荐在该源码上做出过大的修改，请期待2.0版本。我们将会在2.0版本原生支持插件、模板，以及丰富的接口。
- - 不能使用本源码进行任何商业行为，包括但不限于售卖、提供搭建服务、商业使用，以上请联系作者获取商业授权。
- - 虽然开源，但仍需保留作者以及版权信息。若需去除版权信息，请联系作者进行授权。
- - 作者仍然保留版权等法律范围内允许的最大权利。
- - This software now only supports Chinese.
- 
-## 软件作者
- - 程序：悦咚   Email:dark495@moesys.cn
- - 策划：华梦   Email:me@52huameng.com
- - 在初三的某节礼堂大讲座，台下无聊的策划突发奇想，在草稿纸上画下了此项目的第一张草图
-
-## 使用手册
-《绚丽彩虹同学录》站长使用教程 [https://52huameng.com/zixun/1134](https://52huameng.com/zixun/1134)  
-《绚丽彩虹同学录》用户使用教程 [https://52huameng.com/zixun/860](https://52huameng.com/zixun/860)   
-（可把链接分发至用户群内）
-
-## 更新记录
-### 2022-06-13 V1.5 修复版
- - 修复了PHP8.1下运行的问题
- - 处理了大量的历史遗留问题(该项目作者在写该项目时水平很差)
- - 资源(css,js)全部本地化
- - 更新了一下默认资料
- - 修复了系统信息页面因资源失效导致错乱
- - (可能是暂时的)移除了绚丽彩虹播放器(该项目已经停运,新消息通知Q群161354496)
- - **本次更新无任何功能性更新，仅进行优化以及修复bug。由于作者在写该项目时的代码水平非常差，导致目前源代码基本无法维护，请等待2.0新版本(有生之年一定会更新的ww)。**
- - 本次为可选更新但是建议更新，以避免引用的第三方静态资源失效问题。如果您当前程序运行无任何异常，可忽略。
- - 更新方法：
-    - 备份Core/WebApp/Config/SysConfig内的文件(具体见下)
-    - 将新版本文件解压
-    - 之后还原备份的配置文件即可。
-
-## 配置文件简单说明
-配置文件在：Core/WebApp/Config/SysConfig
-如果需要重装，删除Install/Install.lock即可
-
-目录Core/WebApp/Config/SysConfig下文件说明：
- - AuthCode.php : 已经废弃
- - Config.php : 网站主配置文件
- - DefaultUserData.php : 新添加/注册的用户的默认资料模板
- - Info.php : 同学录信息的字段
- - InfoList.php : 一般来说无需修改
- - **Sidebar.php : 侧边栏菜单**
- - UserCardBg.php : 用户卡片背景图片列表
- - UserGroup.php : 用户权限组配置
-
-## 新版官网
-https://www.xlbook.cn
-（未上线，敬请期待）
+请尊重原作者劳动成果。若从 GitHub 以外渠道下载源码，请自行确认文件安全性。

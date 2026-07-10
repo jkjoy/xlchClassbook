@@ -19,7 +19,7 @@ if(!$DirInfo['AnybodyUpload'] && $DirInfo['CreaterId'] != $UserInfo['ID']){
 		'Message'=>'你没有权限上传。'
 	]);
 }
-if($Type == 'File' || $Type == 'SmMs' || $Type == 'Sina' || $Type == 'S3'){
+if($Type == 'File' || $Type == 'S3'){
 	if ($_FILES["file"]["error"] == UPLOAD_ERR_OK){
 		if (!(
 			($_FILES["file"]["type"] == "image/gif") || 
@@ -43,41 +43,7 @@ if($Type == 'File' || $Type == 'SmMs' || $Type == 'Sina' || $Type == 'S3'){
 			unset($g[count($g)-1]);
 			$h=implode('.',$g);
 			
-			if($Type == 'SmMs'){
-				
-				$g=explode('.',$_FILES["file"]["name"]);
-				$b=$g[count($g)-1];
-				
-				$url = "https://sm.ms/api/upload";
-				$post_data = array(
-					'ssl' => true,
-					'smfile' => curl_file_create($_FILES["file"]["tmp_name"],$_FILES["file"]["type"],time().'.'.$b)
-				);
-
-				$output = get_curl($url,$post_data);
-				
-				@unlink($_FILES["file"]["tmp_name"]);
-				
-				if(!($data = json_decode($output,true))){
-					returnResult([
-						'Code'=>-3,
-						'Message'=>'网络错误，上传到sm.ms失败！'.$output
-					]);
-				}
-				
-				if($data['code'] == 'success' && $data['data']['url']){
-					$Mysql->query("INSERT INTO `xlch_image` set `DirId` = '".$DirInfo['ID']."', `Url`='".daddslashes($data['data']['url'])."', `Name`='".daddslashes(htmlspecialchars($h))."', `UploadId`='".$UserInfo['ID']."', `AddDate` = '".date($DatetimeFormat)."'");
-					returnResult([
-						'Code'=>1,
-						'Message'=>'上传成功'
-					]);
-				}else{
-					returnResult([
-						'Code'=>-3,
-						'Message'=>$data['msg']
-					]);
-				}
-			}else if($Type == 'S3'){
+			if($Type == 'S3'){
 				list($usec, $sec) = explode(" ", microtime());
 				$filename = 'Upload/'.date('Y-m-d').'/Classbook_'.((float)$usec + (float)$sec).'_'.md5(RandString(2048)).'.'.$b;
 				$s3Config = isset($WebConfig['Option']['S3']) ? $WebConfig['Option']['S3'] : [];

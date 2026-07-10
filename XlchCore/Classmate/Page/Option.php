@@ -19,7 +19,6 @@ if($val == 'Save'){
 		];
 		return false;
 	}
-	if(getArgs('Music')!='')$UInfo['UserData']['Public']['Music']=(int)getArgs('Music');
 	if(getArgs('PageJS')!='')$UInfo['UserData']['Public']['PageJs']=(int)getArgs('PageJS');
 	if(getArgs('CardBg')!='')$UInfo['UserData']['Public']['CardBg']=(int)getArgs('CardBg');
 	
