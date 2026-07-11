@@ -1,6 +1,6 @@
 <?php
 $config->setConfig('Auth/cache', 'authInfoCache', 'text', false);
-$config->setConfig('Mysql/Mysql', 'MysqlInfo', 'json', 2);
+$config->setConfig('Database/Database', 'MysqlInfo', 'json', 2);
 $config->setConfig('SysConfig/AuthCode', 'AuthCode', 'text', false);
 $config->setConfig('SysConfig/Config', 'WebConfig', 'json', 3, function(){
 	if(!is_file(RootDir.'Install/Install.lock')){

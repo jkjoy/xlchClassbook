@@ -57,7 +57,7 @@ Install/Install.lock
 配置文件位置：
 
 ```text
-Core/WebApp/Config/Mysql/Mysql.php
+Core/WebApp/Config/Database/Database.php
 ```
 
 ### SQLite
@@ -67,7 +67,7 @@ Core/WebApp/Config/Mysql/Mysql.php
 - 创建 `data/` 目录
 - 生成随机数据库文件名，例如 `data/classbook_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.sqlite`
 - 写入基础访问保护文件
-- 将数据库路径保存到 `Core/WebApp/Config/Mysql/Mysql.php`
+- 将数据库路径保存到 `Core/WebApp/Config/Database/Database.php`
 
 请不要把 SQLite 数据库移动到可公开下载的位置。
 

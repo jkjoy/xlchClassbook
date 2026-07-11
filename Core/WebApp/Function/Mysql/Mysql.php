@@ -14,7 +14,7 @@ if(!$Mysql->link){
 		"Title"=>"XlchMysql错误",
 		"Code"=>"50030",
 		"Info"=>"连接数据库失败",
-		"Text"=>"1.数据库信息有误,请编辑[Core/WebApp/Config/Mysql/Mysql.php]<br>2.网络或文件权限问题<br>3.".$Mysql->error(),
+		"Text"=>"1.数据库信息有误,请编辑[Core/WebApp/Config/Database/Database.php]<br>2.网络或文件权限问题<br>3.".$Mysql->error(),
 	));
 }
 define("ZT",$MysqlInfo["QZ"]);

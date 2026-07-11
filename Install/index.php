@@ -41,7 +41,7 @@ function write_install_file($relativePath, $content, $displayPath){
 }
 
 if(version_compare('7.0', PHP_VERSION, ">")) {
-	die('请使用PHP 7.0 或更高的版本运行本程序！<hr></hr>Powered By AdminPHP! (C) Flandre-Studio.cn');
+	die('请使用PHP 7.0 或更高的版本运行本程序！');
 }
 session_start();
 $IsInstalled=is_file('Install.lock');
@@ -173,7 +173,7 @@ function Install(){
 		],
 		[
 			'Name'=>'数据库配置目录写入权限',
-			'Is'=>new_is_writeable(root_path('Core/WebApp/Config/Mysql'))
+			'Is'=>new_is_writeable(root_path('Core/WebApp/Config/Database'))
 		],
 		[
 			'Name'=>'站点配置目录写入权限',
@@ -301,7 +301,7 @@ function Install(){
 	Logg('写入配置文件',1);
 	Logg('保存数据库信息',2);
 	$MysqlInfo="<?php\r\nreturn <<<FlandreStudio_JSON\r\n".json_encode($MysqlInfoArray, JSON_PRETTY_PRINT + JSON_UNESCAPED_UNICODE)."\r\nFlandreStudio_JSON;\r\n?>";
-	if(!write_install_file('Core/WebApp/Config/Mysql/Mysql.php', $MysqlInfo, 'Core/WebApp/Config/Mysql/Mysql.php')){
+	if(!write_install_file('Core/WebApp/Config/Database/Database.php', $MysqlInfo, 'Core/WebApp/Config/Database/Database.php')){
 		return false;
 	}else{
 		Logg(0);
@@ -337,15 +337,12 @@ function Install(){
 	}else{
 		Logg('创建管理员账户',2);
 		
-		if($_POST['Admin_Username'] == '悦咚')
-			$DefaultUserData=include(install_path('yuedong.php'));
-		else
-			$DefaultUserData=json_decode(include(root_path('Core/WebApp/Config/SysConfig/DefaultUserData.php')),true);
+		$DefaultUserData=json_decode(include(root_path('Core/WebApp/Config/SysConfig/DefaultUserData.php')),true);
 		
 		$sql='INSERT INTO `xlch_user` set
 			`Username`="'.addslashes($_POST['Admin_Username']).'" , 
 			`Password`="'.addslashes($_POST['Admin_Password']).'", 
-			`HeadUrl`="QQ:787700998",
+			`HeadUrl`="/Upload/Default/Head.png",
 			`RegIP`="8.8.8.8", 
 			`RegCity`="火星", 
 			`Group`="Admin",
@@ -358,23 +355,6 @@ function Install(){
 			return false;
 		}
 	}
-	
-	$sqls = [
-		'xlch_image_dir'=>"INSERT INTO `xlch_image_dir` (`ID`, `Name`, `Bewrite`, `CreaterId`, `AnybodyUpload`, `AddDate`) VALUES ('1', '默认相册', '这个是系统内置的默认相册，您可以上传图片到这里，也可以在修改这个相册的信息。', '1', '1', now());",
-		'xlch_comment'=>"INSERT INTO `xlch_comment` (`ID`, `UserId`, `Type`, `To`, `Text`, `AddDate`) VALUES ('1', '1', '0', NULL, '欢迎各位同学！这是同学录的第一条留言，您可以在后台进行删除。', now());",
-		'xlch_image'=>"INSERT INTO `xlch_image` (`ID`, `DirId`, `Url`, `Name`, `UploadId`, `AddDate`) VALUES ('1', '1', 'https://q1.qlogo.cn/g?b=qq&nk=787700998&s=640', '悦咚捏', '1', now())"
-	];
-	foreach($sqls as $table=>$sql){
-		if($Mysql->count('select count(1) from `'.$table.'`') == '0'){
-			Logg('写入默认数据',2);
-			if(!$Mysql->query($sql)){
-				Logg($Mysql->error());
-			}else{
-				Logg(0);
-			}
-		}
-	}
-	
 	
 	$_SESSION['Tmp_Username']=$_POST['Admin_Username'];
 	$_SESSION['Tmp_Password']=$_POST['Admin_Password'];
@@ -395,14 +375,14 @@ function Install(){
 }
 include(root_path('Core/AdminPHP/Config/SysConfig/Version.php'));
 ?>
-<!-- 绚丽彩虹工作室 荣誉出品 -->
+<!-- Install Wizard -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html lang="cn">
 	<head>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-		<title>绚丽彩虹安装程序 | 第<?=$Step ?>步</title>
+		<title>班级同学录安装程序 | 第<?=$Step ?>步</title>
 		<!-- Vendor CSS -->
 		<link href="//lib.baomitu.com/fullcalendar/3.4.0/fullcalendar.css" rel="stylesheet">
 		<link href="//lib.baomitu.com/animate.css/3.5.2/animate.min.css" rel="stylesheet">
@@ -441,7 +421,7 @@ include(root_path('Core/AdminPHP/Config/SysConfig/Version.php'));
 						</div>
 					</li>
 					<li class="hi-logo">
-						<a href="index.html">绚丽彩虹同学录 - 安装程序</a>
+						<a href="index.html">班级同学录 - 安装程序</a>
 					</li>
 				</ul>
 			</header>
@@ -450,25 +430,25 @@ include(root_path('Core/AdminPHP/Config/SysConfig/Version.php'));
 					<div class="s-profile">
 						<a href="#" data-ma-action="profile-menu-toggle" style="background: #66ccff;">
 							<div class="sp-pic">
-								<img src="http://q1.qlogo.cn/g?b=qq&nk=787700998&s=100" alt="">
+								<img src="/Upload/Default/Head.png" alt="">
 							</div>
 							<div class="sp-info">
-								绚丽彩虹工作室 荣誉出品
+								班级同学录安装向导
 								<i class="fa fa-caret-down"></i>
 							</div>
 						</a>
 						<ul class="main-menu">
 							<li>
-								<a target="_blank" href="http://flandre-studio.cn/"><i class="fa fa-user"></i> 工作室首页</a>
+								<a href="?step=0"><i class="fa fa-home"></i> 安装说明</a>
 							</li>
 							<li>
-								<a target="_blank" href="http://xlch.me"><i class="fa fa-user"></i> 绚丽博客</a>
+								<a href="?step=2"><i class="fa fa-check-square-o"></i> 配置检测</a>
 							</li>
 							<li>
-								<a target="_blank" href="https://jq.qq.com/?_wv=1027&k=52XZ2wW"><i class="fa fa-user"></i> 站长交流群</a>
+								<a href="?step=4"><i class="fa fa-cog"></i> 信息配置</a>
 							</li>
 							<li>
-								<a target="_blank" href="https://jq.qq.com/?_wv=1027&k=5CQ19VG"><i class="fa fa-user"></i> 同学录交流群</a>
+								<a href="/"><i class="fa fa-link"></i> 网站首页</a>
 							</li>
 						</ul>
 					</div>
@@ -504,13 +484,13 @@ include(root_path('Core/AdminPHP/Config/SysConfig/Version.php'));
 								case 0: ?>
 								<div class="card">
 									<div class="card-header bgm-blue">
-										<h2>hello~ 欢迎使用 绚丽彩虹同学录！</h2>
+										<h2>hello~ 欢迎使用班级同学录！</h2>
 									</div>
 									<div class="card-body card-padding">
-										<p>首先，不管您使用什么手段获取了该程序，很高兴您选择了我们开发的程序，为了回报您对我们的信任和支持，我们将会为您提供更为精致和人性化的程序。</p>
+										<p>安装向导将帮助您完成运行环境检测、数据库连接、站点配置和管理员账户创建。</p>
 										<br>
-										<p>绚丽彩虹同学录为一款轻便、强大、私密的电子同学录程序。</p>
-										<p>构想由华梦在2017年3月提出，由绚丽彩虹在2017年5月编写，采用bootstrap框架，基于PHP7.1开发。</p>
+										<p>班级同学录提供个人主页、同学录、相册、留言板等功能。</p>
+										<p>当前版本支持 PHP 8.x、MySQL 和 SQLite。</p>
 										<br>
 										<p>同学录包含个人主页、同学录、相册、留言板三大功能。</p>
 										<br>
@@ -519,7 +499,7 @@ include(root_path('Core/AdminPHP/Config/SysConfig/Version.php'));
 										<p>【相册】功能能让您可以自由的上传图片并让同学查看。所有的照片保存期限都是永久的，不像QQ那样过段时间换台手机就没了。</p>
 										<p>我们努力将功能做的极简化、精致化，目的是让大家能够更高效的使用，不使部分功能荒废。</p>
 										<br>
-										<p>更为强大的功能，更加人性化的操作，将会在安装向导结束后，一一呈现给您。</p>
+										<p>安装完成后，您可以进入后台继续调整站点配置。</p>
 										<h4 class="c-pink">注：如果您的数据库中已经存有同学录数据，将会沿用旧数据。</h4>
 										<br>
 										<a href="?step=<?=($Step+1)?>" class="btn btn-block bgm-green">下一步 →</a>
@@ -527,12 +507,10 @@ include(root_path('Core/AdminPHP/Config/SysConfig/Version.php'));
 								</div>
 								<div class="card">
 									<div class="card-header bgm-cyan">
-										<h2>更新日志 —— 当前版本:<?=$Version ?> (<?=$Version_?>)</h2>
+										<h2>版本信息 —— 当前版本:<?=$Version ?> (<?=$Version_?>)</h2>
 									</div>
 									<div class="card-body card-padding">
-										<!--<iframe src="http://api.txl.xlch8.cn/Version.php" frameborder=0 style="min-height:300px;width:100%"></iframe>-->
-										<h1>_(:з)∠)_ 行了，网站挂了，暂时懒得修了...<br/><br/></h1>
-										<p>完全开源地址：<b><a href="https://github.com/xlch88/xlchClassbook" target="_blank">https://github.com/xlch88/xlchClassbook</a></b></p>
+										<p>请根据 README 文档确认运行环境和部署配置。</p>
 									</div>
 								</div>
 								<?php break; ?>
@@ -542,9 +520,8 @@ include(root_path('Core/AdminPHP/Config/SysConfig/Version.php'));
 										<h2>使用协议</h2>
 									</div>
 									<div class="card-body card-padding">
-										<!--<iframe src="http://doc.txl.xlch8.cn/Install.html" frameborder=0 style="min-height:500px;width:100%"></iframe>-->
-										<h1>_(:з)∠)_ 行了，网站挂了，暂时懒得修了...<br/><br/></h1>
-										<p>相关说明：<b><a href="https://github.com/xlch88/xlchClassbook/blob/master/README.md" target="_blank">https://github.com/xlch88/xlchClassbook/blob/master/README.md</a></b><br/><br/></p>
+										<p>请确认您拥有当前站点目录的写入权限，并已准备好数据库连接信息。</p>
+										<p>继续安装表示您同意在当前目录写入配置文件和安装锁文件。</p>
 										<a href="?step=<?=($Step+1)?>" class="btn btn-block bgm-green">同意 →</a>
 									</div>
 								</div>
@@ -610,7 +587,7 @@ include(root_path('Core/AdminPHP/Config/SysConfig/Version.php'));
 												<tr>
 													<td>数据库配置目录写入权限</td>
 													<td>必须</td>
-													<td><?php if (new_is_writeable(root_path('Core/WebApp/Config/Mysql'))) { echo '<font color="green">可用</font>'; } else { echo '<font color="red">不支持</font>'; } ?></td>
+													<td><?php if (new_is_writeable(root_path('Core/WebApp/Config/Database'))) { echo '<font color="green">可用</font>'; } else { echo '<font color="red">不支持</font>'; } ?></td>
 													<td>保存数据库连接信息</td>
 												</tr>
 												<tr>
@@ -843,7 +820,7 @@ Xlch88;
 												<label for="WebConfig_RegisterPassword" class="col-sm-2 control-label">班级密码</label>
 												<div class="col-sm-10">
 													<div class="fg-line">
-														<input type="text" class="form-control input-sm" name="WebConfig_RegisterPassword" id="WebConfig_RegisterPassword" placeholder="注册时需要填写" value="Xlch88">
+														<input type="text" class="form-control input-sm" name="WebConfig_RegisterPassword" id="WebConfig_RegisterPassword" placeholder="注册时需要填写" value="">
 													</div>
 												</div>
 											</div>
@@ -860,7 +837,7 @@ Xlch88;
 												<label for="Admin_Username" class="col-sm-2 control-label">管理员姓名</label>
 												<div class="col-sm-10">
 													<div class="fg-line">
-														<input type="text" class="form-control input-sm" required="required" name="Admin_Username" id="Admin_Username" value="悦咚">
+														<input type="text" class="form-control input-sm" required="required" name="Admin_Username" id="Admin_Username" value="admin">
 													</div>
 												</div>
 											</div>
@@ -910,7 +887,7 @@ Xlch88;
 										<?php $_SESSION=[]; ?>
 										<p class="c-pink">请妥善保管您的密码，以免发生安全隐患。</p>
 										<hr></hr>
-										<p><a class="c-purple" target="_blank" href="https://jq.qq.com/?_wv=1027&k=5y1Z7YD">绚丽彩虹同学录用户群</a> | <a target="_blank" href="http://flandre-studio.cn/">绚丽彩虹工作室</a> | <a target="_blank" href="http://shop.xlch8.cn/">绚丽彩虹商城</a> | <a target="_blank" href="http://www.xlch8.cn/">绚丽彩虹Project</a></p>
+										<p>安装完成后请及时删除或限制访问 Install 目录。</p>
 									</div>
 								</div>
 								<?php break; ?>
@@ -944,11 +921,10 @@ Xlch88;
 				</section>
 			</section>
 			<footer id="footer">
-				Copyright &copy; 2017 绚丽彩虹工作室 Flandre-Studio.cn
+				班级同学录安装程序
 				<ul class="f-menu">	
-					<li><a target="_blank" href="http://flandre-studio.cn/">绚丽彩虹工作室</a></li>
-					<li><a target="_blank" href="http://xlch.me/">绚丽博客</a></li>	
-					<li><a target="_blank" href="http://www.52huameng.com/">华梦博客</a></li>
+					<li><a href="?step=0">安装说明</a></li>
+					<li><a href="?step=2">配置检测</a></li>
 				</ul>
 			</footer>
 		</section>

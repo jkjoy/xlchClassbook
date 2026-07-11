@@ -12,22 +12,22 @@ return <<<FlandreStudio_JSON
     },
     "SEO": {
         "Title": "班级同学录",
-        "Description": "绚丽彩虹同学录是一款以简洁、高效为目的的自适应同学录，内有同学录、相册、留言板三大功能，当您真正使用之时，方能见证其功能强大。完备的加密技术确保用户资料不被窃取。",
+        "Description": "班级同学录提供同学录、相册、留言板等功能，适合班级成员记录资料、分享照片和交流留言。",
         "Keywords": "班级同学录,简洁同学录,自适应同学录,同学录程序,电子同学录,网络同学录,同学录网站,免费同学录"
     },
     "AdminInfo": {
-        "QQ": "787700998",
-        "WeChat": "ZeroDay9",
-        "Email": "dark495@moesys.cn"
+        "QQ": "",
+        "WeChat": "",
+        "Email": ""
     },
     "Group": {
-        "QQ": "589697104",
+        "QQ": "",
         "WeChat": "",
-        "QQUrl": "https:\/\/jq.qq.com\/?_wv=1027&amp;k=5y1Z7YD"
+        "QQUrl": ""
     },
     "Option": {
         "Register": true,
-        "RegisterPassword": "Xlch88",
+        "RegisterPassword": "",
         "Color": "blue",
         "ImageDirOnlyAdmin": false,
         "ImageUpload": 0,

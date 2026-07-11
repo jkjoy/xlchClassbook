@@ -7,7 +7,7 @@ return <<<FlandreStudio_JSON
         "Sign": "这家伙很怠惰，什么都没写！"
     },
     "SocialAccount": {
-        "QQ": "787700998"
+        "QQ": ""
     }
 }
 FlandreStudio_JSON;
