@@ -33,9 +33,6 @@ return <<<FlandreStudio_JSON
                         "Login": true
                     }
                 },
-                "VCode": {
-                    "Allow": true
-                },
                 "All": {
                     "Allow": false
                 }

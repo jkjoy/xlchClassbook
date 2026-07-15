@@ -150,7 +150,7 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 						</ul>
 					</div>
 					<div class="col-md-6 credit">
-						<p>版权归属 &copy; 2013-<?=date('Y')?> <a href="http://Flandre-Studio.cn/" target="_blank">绚丽彩虹工作室</a>. All Rights Reserved. <br />Powered By <a href="http://txl.xlch8.cn/" target="_blank">绚丽彩虹同学录</a>.</p>
+						<p>版权归属 &copy; 2013-<?=date('Y')?> <a href="http://Flandre-Studio.cn/" target="_blank">绚丽彩虹工作室</a>. All Rights Reserved. <br />Powered By <a href="/"><?=$WebConfig['Info']['WebName']?></a>.<?php if(!empty($WebConfig['Info']['ICP'])){ ?><br /><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer"><?=$WebConfig['Info']['ICP']?></a><?php } ?></p>
 					</div>
 				</div>
 			</div>

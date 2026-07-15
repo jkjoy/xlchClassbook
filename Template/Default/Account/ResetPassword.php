@@ -70,15 +70,6 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 								<input type="text" class="form-control" placeholder="设置您的新密码" required id="NewPassword" />
 							</div>
 						</div>
-						<label class="control-label">验证码<span class="text-danger">*</span></label>
-						<div class="row m-b-15">
-							<div class="col-md-12">
-								<div class="input-group margin-bottom-sm">
-									<input class="form-control" maxlength=4 style="height:45px" type="text" id="VCode" placeholder="验证码">
-									<span class="input-group-addon"><img height="30px" src="<?=U('func','VCode')?>" id="VCodeShow"></span>
-								</div>
-							</div>
-						</div>
 						<div class="register-buttons">
 							<button type="submit" required="required" id="Button" class="btn btn-primary btn-block btn-lg">重置密码</button>
 						</div>
@@ -90,7 +81,7 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 							<!-- ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 							绚丽彩虹同学录 版权 请勿修改、删除 !否则视为违反使用协议!
 							■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ -->
-							Powered By <a href="http://txl.xlch8.cn">绚丽彩虹同学录</a>
+							Powered By <a href="/"><?=$WebConfig['Info']['WebName']?></a>
 						</p>
 					</form>
 				</div>
@@ -115,10 +106,6 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 	$(document).ready(function() {
 		App.init();
 	});
-	$('#VCodeShow').click(function(){
-		$(this).attr('src','<?=U('func','VCode')?>');
-		$('#VCode').val('');
-	});
 	$('#ResetPassword').submit(function(){
 		$('#Button').attr('disabled','disabled');
 		$.ajax({
@@ -127,8 +114,7 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 				Username:$('#Username').val(),
 				SafeAnswer:$('#SafeAnswer').val(),
 				ClassPassword:$('#ClassPassword').val(),
-				NewPassword:$('#NewPassword').val(),
-				VCode:$('#VCode').val(),
+				NewPassword:$('#NewPassword').val()
 			},
 			dataType:'json',
 			success:function(data){
@@ -140,7 +126,6 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 				}else{
 					$('#Button').removeAttr('disabled');
 					notify(data.Message,'danger');
-					$('#VCodeShow').click();
 				}
 			},
 			error:function(){

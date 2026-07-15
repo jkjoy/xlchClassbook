@@ -10,6 +10,7 @@ $WebConfig['Option']['S3'] = isset($WebConfig['Option']['S3']) ? $WebConfig['Opt
 	'pathStyle'=>false
 ];
 $WebConfig['Option']['ImageUpload'] = in_array($WebConfig['Option']['ImageUpload'], [0, 3]) ? $WebConfig['Option']['ImageUpload'] : 0;
+$WebConfig['Info']['ICP'] = isset($WebConfig['Info']['ICP']) ? $WebConfig['Info']['ICP'] : '';
 ?>
 <?php include(T('_Common/Header')); ?>
 <div class="container">
@@ -40,6 +41,14 @@ $WebConfig['Option']['ImageUpload'] = in_array($WebConfig['Option']['ImageUpload
 										<div class="col-sm-10">
 											<div class="fg-line">
 												<input type="text" class="form-control input-sm" name="Info_WebName" id="Info_WebName" placeholder="" value="<?=$WebConfig['Info']['WebName']?>">
+											</div>
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="Info_ICP" class="col-sm-2 control-label">ICP备案号</label>
+										<div class="col-sm-10">
+											<div class="fg-line">
+												<input type="text" class="form-control input-sm" name="Info_ICP" id="Info_ICP" placeholder="例如：京ICP备12345678号" value="<?=$WebConfig['Info']['ICP']?>">
 											</div>
 										</div>
 									</div>

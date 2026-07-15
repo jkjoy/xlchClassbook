@@ -27,15 +27,6 @@ if($Type == 'GetSafeQuestion'){
 		'Code'=>1
 	]));
 }else if($Type == 'Set'){
-	if(strtolower(getArgs('VCode')) != strtolower($_SESSION["VCode"])){
-		unset($_SESSION["VCode"]);
-		exit(json_encode([
-			'Message'=>'验证码错误！',
-			'Code'=>-1
-		]));
-	}
-	unset($_SESSION["VCode"]);
-	
 	if(getArgs('ClassPassword') != $WebConfig['Option']['RegisterPassword']){
 		exit(json_encode([
 			'Message'=>'班级密码错误，请联系站点管理员获取。',

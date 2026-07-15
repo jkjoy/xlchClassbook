@@ -16,6 +16,7 @@ if($Type == 'Save'){
 	}
 	// 站点信息 ---
 	/* 站点名称 */			if(isset($_POST['Info_WebName']))$WebConfig['Info']['WebName']=htmlspecialchars($_POST['Info_WebName']);
+	/* ICP备案号 */			if(isset($_POST['Info_ICP']))$WebConfig['Info']['ICP']=htmlspecialchars(trim($_POST['Info_ICP']));
 	/* SEO_站点标题 */		if(isset($_POST['SEO_Title']))$WebConfig['SEO']['Title']=htmlspecialchars($_POST['SEO_Title']);
 	/* SEO_站点描述 */		if(isset($_POST['SEO_Description']))$WebConfig['SEO']['Description']=htmlspecialchars($_POST['SEO_Description']);
 	/* SEO_站点关键字 */	if(isset($_POST['SEO_Keywords']))$WebConfig['SEO']['Keywords']=htmlspecialchars($_POST['SEO_Keywords']);

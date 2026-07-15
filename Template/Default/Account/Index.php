@@ -78,7 +78,7 @@ if(!defined("AdminPHP")) exit('<h1 style="color:red">Bad Reuest!</h1> <hr /> Pow
 							<!-- ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 							绚丽彩虹同学录 版权 请勿修改、删除 !否则视为违反使用协议!
 							■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ -->
-							Powered By <a href="http://txl.xlch8.cn">绚丽彩虹同学录</a>
+							Powered By <a href="/"><?=$WebConfig['Info']['WebName']?></a>
 						</p>
 					</form>
 				</div>

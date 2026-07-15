@@ -8,7 +8,8 @@ return <<<FlandreStudio_JSON
         "Welcome": {
             "Page": "Creative"
         },
-        "WebName": "班级同学录"
+        "WebName": "班级同学录",
+        "ICP": ""
     },
     "SEO": {
         "Title": "班级同学录",
